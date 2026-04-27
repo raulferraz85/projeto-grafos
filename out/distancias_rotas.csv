@@ -1,0 +1,6 @@
+origem,destino,custo,caminho
+REC,POA,6,REC -> BSB -> CWB -> FLN -> POA
+MAO,GRU,5,MAO -> BSB -> GRU
+REC,GRU,5,REC -> BSB -> GRU
+BEL,CWB,7,BEL -> MAO -> BSB -> CWB
+THE,VIX,9,THE -> JPA -> NAT -> FOR -> SSA -> REC -> BSB -> GRU -> GIG -> CNF -> VIX
