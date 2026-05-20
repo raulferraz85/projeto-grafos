@@ -1,0 +1,172 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #0f172a;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+<div style="
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    z-index: 999;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 16px 20px;
+    border-radius: 14px;
+    color: white;
+    font-family: Arial;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+">
+    <h2 style="margin: 0 0 10px 0;">Árvore de percurso</h2>
+    <div><b style="color:#38bdf8;">●</b> Recife → Porto Alegre</div>
+    <div><b style="color:#f97316;">●</b> Manaus → São Paulo</div>
+</div>
+
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#38bdf8", "fixed": true, "font": {"color": "white"}, "id": "REC", "label": "REC\nRecife", "shape": "dot", "size": 35, "x": -500, "y": -100}, {"color": "#facc15", "fixed": true, "font": {"color": "white"}, "id": "BSB", "label": "BSB\nBras\u00edlia", "shape": "dot", "size": 35, "x": -250, "y": -100}, {"color": "#22c55e", "fixed": true, "font": {"color": "white"}, "id": "CWB", "label": "CWB\nCuritiba", "shape": "dot", "size": 35, "x": 0, "y": -100}, {"color": "#22c55e", "fixed": true, "font": {"color": "white"}, "id": "FLN", "label": "FLN\nFlorian\u00f3polis", "shape": "dot", "size": 35, "x": 250, "y": -100}, {"color": "#22c55e", "fixed": true, "font": {"color": "white"}, "id": "POA", "label": "POA\nPorto Alegre", "shape": "dot", "size": 35, "x": 500, "y": -100}, {"color": "#fb923c", "fixed": true, "font": {"color": "white"}, "id": "MAO", "label": "MAO\nManaus", "shape": "dot", "size": 35, "x": -500, "y": 180}, {"color": "#a78bfa", "fixed": true, "font": {"color": "white"}, "id": "GRU", "label": "GRU\nS\u00e3o Paulo", "shape": "dot", "size": 35, "x": 0, "y": 180}]);
+                  edges = new vis.DataSet([{"color": "#38bdf8", "from": "REC", "title": "Caminho Recife \u2192 Porto Alegre", "to": "BSB", "width": 6}, {"color": "#38bdf8", "from": "BSB", "title": "Caminho Recife \u2192 Porto Alegre", "to": "CWB", "width": 6}, {"color": "#38bdf8", "from": "CWB", "title": "Caminho Recife \u2192 Porto Alegre", "to": "FLN", "width": 6}, {"color": "#38bdf8", "from": "FLN", "title": "Caminho Recife \u2192 Porto Alegre", "to": "POA", "width": 6}, {"color": "#f97316", "from": "MAO", "title": "Caminho Manaus \u2192 S\u00e3o Paulo", "to": "BSB", "width": 6}, {"color": "#f97316", "from": "BSB", "title": "Caminho Manaus \u2192 S\u00e3o Paulo", "to": "GRU", "width": 6}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": false,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
