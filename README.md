@@ -52,6 +52,36 @@ python src/viz.py
 ```
 Isso gerará o arquivo `out/arvore_percurso.html`.
 
+## Frontend (SkyGraph)
+
+Há também um frontend em React (Vite + TypeScript + Tailwind + Framer Motion + Recharts)
+que consome um único `frontend/public/data.json` gerado a partir de `out/` + `data/`.
+
+### Atalho (recomendado)
+
+Na raiz do projeto, um único script prepara backend + JSON do frontend:
+
+```bash
+./prepare.sh
+cd frontend && npm run dev   # http://localhost:5173
+```
+
+### Passo a passo manual
+
+```bash
+# 1. Gerar o JSON consolidado a partir do out/
+python3 scripts/build_data.py
+
+# 2. Rodar o app (regenera o JSON automaticamente)
+cd frontend
+npm install
+npm run dev      # http://localhost:5173
+```
+
+Depois de regerar `out/` (executando o pipeline em Python), basta rodar
+`python3 scripts/build_data.py` (ou `npm run data` dentro de `frontend/`) para
+o frontend refletir os novos dados.
+
 ## Algoritmos Implementados (Manualmente)
 
 - **BFS (Breadth-First Search)**: Cálculo de níveis e distâncias.
