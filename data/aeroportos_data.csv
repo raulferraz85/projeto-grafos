@@ -1,21 +1,129 @@
 iata,cidade,regiao
-REC,Recife,Nordeste
-SSA,Salvador,Nordeste
-FOR,Fortaleza,Nordeste
-NAT,Natal,Nordeste
-JPA,Joao Pessoa,Nordeste
-GRU,Sao Paulo,Sudeste
-CGH,Sao Paulo,Sudeste
-GIG,Rio de Janeiro,Sudeste
+VDC,Vitória da Conquista,Nordeste
+CDJ,Conceição do Araguaia,Norte
+ARX,Aracati,Nordeste
+JTC,Bauru,Sudeste
+AQA,Araraquara,Sudeste
+AJU,Aracaju,Nordeste
+AFL,Alta Floresta,Centro-Oeste
+ARU,Araçatuba,Sudeste
+AAX,Araxá,Sudeste
+BEL,Belém,Norte
+BGX,Bagé,Sul
+PLU,Belo Horizonte,Sudeste
+BFH,Curitiba,Sul
+BSB,Brasília,Centro-Oeste
+BAT,Barretos,Sudeste
+BVB,Boa Vista,Norte
+BPG,Barra do Garças,Centro-Oeste
+BZC,Cabo Frio,Sudeste
+CAC,Cascavel,Sul
 CNF,Belo Horizonte,Sudeste
-VIX,Vitoria,Sudeste
-BSB,Brasilia,Centro-Oeste
-GYN,Goiania,Centro-Oeste
+CGR,Campo Grande,Centro-Oeste
+XAP,Chapecó,Sul
+CLN,Carolina,Nordeste
+CKS,Parauapebas,Norte
+CCM,Criciúma,Sul
+QNS,Porto Alegre,Sul
+CAW,Campos dos Goytacazes,Sudeste
+CMG,Corumbá,Centro-Oeste
 CWB,Curitiba,Sul
-FLN,Florian�polis,Sul
-POA,Porto Alegre,Sul
+CRQ,Caravelas,Nordeste
+CXJ,Caxias Do Sul,Sul
+CGB,Cuiabá,Centro-Oeste
+CZS,Cruzeiro Do Sul,Norte
+PPB,Presidente Prudente,Sudeste
 MAO,Manaus,Norte
-BEL,Belem,Norte
+JCR,Jacareacanga,Norte
+IGU,Foz do Iguaçu,Sul
+FLN,Florianópolis,Sul
+FEN,Fernando de Noronha,Nordeste
+FOR,Fortaleza,Nordeste
+GIG,Rio De Janeiro,Sudeste
+GJM,Guajará-Mirim,Norte
+GYN,Goiânia,Centro-Oeste
+GRU,São Paulo,Sudeste
+GVR,Governador Valadares,Sudeste
+GUJ,Guaratinguetá,Sudeste
+ATM,Altamira,Norte
+ITA,Itacoatiara,Norte
+ITB,Itaituba,Norte
+IOS,Ilhéus,Nordeste
+IPN,Ipatinga,Sudeste
+IMP,Imperatriz,Nordeste
+JJD,Cruz,Nordeste
+JDF,Juiz de Fora,Sudeste
+JHF,São Roque,Sudeste
+JPA,João Pessoa,Nordeste
+RRJ,Rio de Janeiro,Sudeste
+JOI,Joinville,Sul
+CPV,Campina Grande,Nordeste
+VCP,Campinas,Sudeste
+LAJ,Lages,Sul
+LIP,Lins,Sudeste
+LDB,Londrina,Sul
+LAZ,Bom Jesus da Lapa,Nordeste
+MAB,Marabá,Norte
+MQH,Minaçu,Centro-Oeste
+MEU,Almeirim,Norte
+MEA,Macaé,Sudeste
+MGF,Maringá,Sul
+MOC,Montes Claros,Sudeste
+MII,Marília,Sudeste
+PLL,Manaus,Norte
+MCZ,Maceió,Nordeste
+MCP,Macapá,Norte
+MVF,Mossoró,Nordeste
+RTE,São Paulo,Sudeste
+MNX,Manicoré,Norte
+NVT,Navegantes,Sul
+GEL,Santo Ângelo,Sul
+OYK,Oiapoque,Norte
+POA,Porto Alegre,Sul
+PHB,Parnaíba,Nordeste
+POO,Poços De Caldas,Sudeste
+PFB,Passo Fundo,Sul
+PGZ,Ponta Grossa,Sul
+PMW,Palmas,Norte
+PET,Pelotas,Sul
+PNZ,Petrolina,Nordeste
+PNB,Porto Nacional,Norte
+PMG,Ponta Porã,Centro-Oeste
+BPS,Porto Seguro,Nordeste
 PVH,Porto Velho,Norte
 RBR,Rio Branco,Norte
+ROO,Rondonópolis,Centro-Oeste
+REC,Recife,Nordeste
+SDU,Rio de Janeiro,Sudeste
+RAO,Ribeirão Preto,Sudeste
+SNZ,Rio de Janeiro,Sudeste
+NAT,Natal,Nordeste
+SJK,São José Dos Campos,Sudeste
+SLZ,São Luís,Nordeste
+RIA,Santa Maria,Sul
+STM,Santarém,Norte
+CGH,São Paulo,Sudeste
+SJP,São José do Rio Preto,Sudeste
+SSZ,Guarujá,Sudeste
+SSA,Salvador,Nordeste
+TMT,Oriximiná,Norte
 THE,Teresina,Nordeste
+TFF,Tefé,Norte
+TRQ,Tarauacá,Norte
+TEC,Telêmaco Borba,Sul
+TBT,Tabatinga,Norte
+TUR,Tucuruí,Norte
+SJL,São Gabriel da Cachoeira,Norte
+PAV,Paulo Afonso,Nordeste
+URG,Uruguaiana,Sul
+UDI,Uberlândia,Sudeste
+UBA,Uberaba,Sudeste
+VAG,Varginha,Sudeste
+BVH,Vilhena,Norte
+VIX,Vitória,Sudeste
+IZA,Juiz de Fora,Sudeste
+FEC,Feira de Santana,Nordeste
+JSO,Sobral,Nordeste
+EEA,Correia Pinto,Sul
+LHN,Linhares,Sudeste
+AUX,Araguaína,Norte

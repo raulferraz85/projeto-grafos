@@ -1,6 +1,6 @@
 origem,destino,custo,caminho
-REC,POA,7.0,REC -> BSB -> CWB -> FLN -> POA
-MAO,GRU,5.0,MAO -> BSB -> GRU
-REC,GRU,5.0,REC -> BSB -> GRU
-BEL,CWB,7.0,BEL -> MAO -> BSB -> CWB
-THE,VIX,14.0,THE -> JPA -> NAT -> FOR -> SSA -> REC -> BSB -> GRU -> GIG -> CNF -> VIX
+REC,POA,252.0,REC -> POA
+MAO,GRU,232.0,MAO -> GRU
+REC,GRU,188.0,REC -> GRU
+BEL,CWB,231.0,BEL -> CWB
+THE,VIX,266.0,THE -> BPS -> CNF -> VIX
