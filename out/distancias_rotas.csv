@@ -1,6 +1,0 @@
-origem,destino,custo,caminho
-REC,POA,252.0,REC -> POA
-MAO,GRU,232.0,MAO -> GRU
-REC,GRU,188.0,REC -> GRU
-BEL,CWB,231.0,BEL -> CWB
-THE,VIX,266.0,THE -> BPS -> CNF -> VIX
