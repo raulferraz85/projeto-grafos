@@ -115,10 +115,14 @@ python -m src.cli --dataset data/aeroportos_data.csv --alg BELLMAN-FORD --source
 | `distancias_rotas.csv` | Caminhos mínimos (Dijkstra) para os pares em `rotas.csv` |
 | `grafo_interativo.html` | Grafo interativo com busca e destaque de caminhos |
 | `arvore_percurso.html` | Árvore de percurso dos caminhos obrigatórios |
-| `distribuicao_graus.png` | Histograma de distribuição de graus (exploratória) |
-| `aeroportos_por_regiao.png` | Aeroportos por região (exploratória) |
-| `densidade_por_regiao.png` | Densidade regional comparada (explanatória) |
-| `top_10_conectados.png` | Top 10 hubs mais conectados (explanatória) |
+| `grau_por_regiao_boxplot.png` | Boxplot de grau por região — compara conectividade local |
+| `densidade_ego_por_regiao_violin.png` | Violin plot da densidade de ego-redes por região |
+| `composicao_tipos_conexao_por_regiao.png` | Barras empilhadas: hub nacional / regional / voo regional por região de origem |
+| `peso_conexoes_por_tipo_boxplot.png` | Duração estimada (min) das conexões por tipo |
+| `top_15_hubs_grau.png` | Ranking dos 15 aeroportos com maior grau |
+| `relacao_grau_vs_densidade_ego.png` | Scatter grau × densidade ego (cores por região) |
+| `distribuicao_tempo_rotas_minimas.png` | Histograma dos tempos de caminhos mínimos (rotas.csv) |
+| `heatmap_media_peso_origem_destino_regiao.png` | Heatmap da duração média entre pares de regiões |
 
 ---
 

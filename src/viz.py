@@ -419,96 +419,265 @@ def generate_path_tree(graph, paths, out_path):
     print(f"Arvore de percurso gerada em: {out_path}")
 
 
-def generate_exploratory_plots(out_dir):
+REGION_ORDER = ["Norte", "Nordeste", "Centro-Oeste", "Sudeste", "Sul"]
+
+_TIPO_LABELS = {
+    "hub_nacional": "Hub nacional",
+    "hub_regional": "Hub regional",
+    "regional": "Voo regional",
+}
+
+
+def _save_fig(fig, out_dir, filename):
+    os.makedirs(out_dir, exist_ok=True)
+    fig.savefig(os.path.join(out_dir, filename), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+_LEGACY_PNGS = (
+    "distribuicao_graus.png",
+    "aeroportos_por_regiao.png",
+    "densidade_por_regiao.png",
+    "top_10_conectados.png",
+)
+
+
+def generate_exploratory_plots(out_dir, data_dir="data"):
     """
-    Gera 4 visualizacoes analiticas salvas em out/:
-      - distribuicao_graus.png       [EXPLORATORIA] distribuicao dos graus
-      - aeroportos_por_regiao.png    [EXPLORATORIA] qtd de aeroportos por regiao
-      - densidade_por_regiao.png     [EXPLANATORIA] comparativo de densidade regional
-      - top_10_conectados.png        [EXPLANATORIA] ranking dos 10 hubs mais conectados
+    Gera 8 visualizacoes analiticas em out/:
+      - grau_por_regiao_boxplot.png
+      - densidade_ego_por_regiao_violin.png
+      - composicao_tipos_conexao_por_regiao.png
+      - peso_conexoes_por_tipo_boxplot.png
+      - top_15_hubs_grau.png
+      - relacao_grau_vs_densidade_ego.png
+      - distribuicao_tempo_rotas_minimas.png
+      - heatmap_media_peso_origem_destino_regiao.png
     """
+    for legacy in _LEGACY_PNGS:
+        legacy_path = os.path.join(out_dir, legacy)
+        if os.path.isfile(legacy_path):
+            os.remove(legacy_path)
+
     sns.set_theme(style="darkgrid", palette="muted")
+    region_palette = dict(REGION_COLORS)
+
     ego_df = pd.read_csv(os.path.join(out_dir, "ego_aeroportos.csv"))
+    airports_df = pd.read_csv(os.path.join(data_dir, "aeroportos_data.csv"))
+    adj_df = pd.read_csv(os.path.join(data_dir, "adjacencias_aeroportos.csv"))
+    routes_df = pd.read_csv(os.path.join(out_dir, "distancias_rotas.csv"))
 
-    with open(os.path.join(out_dir, "regioes.json"), "r", encoding="utf-8") as f:
-        regioes = json.load(f)
-    reg_df = pd.DataFrame(regioes)
+    region_map = airports_df.set_index("iata")["regiao"].to_dict()
+    ego_df = ego_df.merge(
+        airports_df[["iata", "regiao"]].rename(columns={"iata": "aeroporto"}),
+        on="aeroporto",
+        how="left",
+    )
+    ego_df["regiao"] = ego_df["regiao"].fillna("Desconhecida")
 
-    # Paleta por regiao alinhada ao HTML interativo
-    region_palette = {r: c for r, c in REGION_COLORS.items()}
-    reg_df["color"] = reg_df["region"].map(region_palette)
+    adj_df = adj_df.rename(columns={"tipo_conexao": "tipo"})
+    adj_df["regiao_origem"] = adj_df["origem"].map(region_map)
+    adj_df["regiao_destino"] = adj_df["destino"].map(region_map)
+    adj_df = adj_df.dropna(subset=["regiao_origem", "regiao_destino"])
 
-    # ── 1. Distribuicao de graus (EXPLORATORIA) ────────────────────
+    region_cats = [r for r in REGION_ORDER if r in ego_df["regiao"].unique()]
+
+    # ── 1. Grau por regiao (boxplot) ─────────────────────────────────
     fig, ax = plt.subplots(figsize=(10, 5))
-    sns.histplot(ego_df["grau"], bins=15, kde=True, color="#38bdf8", ax=ax,
-                 edgecolor="#0f172a", linewidth=0.5)
-    ax.set_title("Distribuição de Graus dos Aeroportos\n"
-                 "(a maioria tem poucos voos; poucos hubs concentram muitas conexões)",
-                 fontsize=13, pad=12)
-    ax.set_xlabel("Grau (número de conexões)", fontsize=11)
-    ax.set_ylabel("Frequência", fontsize=11)
-    ax.axvline(ego_df["grau"].mean(), color="#f97316", linestyle="--", linewidth=1.5,
-               label=f"Média ({ego_df['grau'].mean():.1f})")
-    ax.axvline(ego_df["grau"].median(), color="#facc15", linestyle=":", linewidth=1.5,
-               label=f"Mediana ({ego_df['grau'].median():.1f})")
-    ax.legend(fontsize=10)
-    fig.tight_layout()
-    fig.savefig(os.path.join(out_dir, "distribuicao_graus.png"), dpi=150)
-    plt.close(fig)
-
-    # ── 2. Aeroportos por regiao (EXPLORATORIA) ────────────────────
-    fig, ax = plt.subplots(figsize=(9, 5))
-    bars = ax.bar(reg_df["region"], reg_df["order"],
-                  color=[region_palette.get(r, "#94a3b8") for r in reg_df["region"]],
-                  edgecolor="#0f172a", linewidth=0.8)
-    ax.bar_label(bars, padding=4, fontsize=10)
-    ax.set_title("Número de Aeroportos por Região do Brasil", fontsize=13, pad=12)
+    sns.boxplot(
+        data=ego_df, x="regiao", y="grau", hue="regiao", order=region_cats,
+        hue_order=region_cats, palette=region_palette, ax=ax, linewidth=1.2,
+        dodge=False, legend=False,
+    )
+    ax.set_title(
+        "Distribuição de Grau por Região\n"
+        "(compara conectividade local entre regiões)",
+        fontsize=13, pad=12,
+    )
     ax.set_xlabel("Região", fontsize=11)
-    ax.set_ylabel("Número de Aeroportos", fontsize=11)
-    patches = [mpatches.Patch(color=c, label=r) for r, c in region_palette.items()]
-    ax.legend(handles=patches, title="Região", fontsize=9, title_fontsize=9,
-              loc="upper right")
-    ax.set_ylim(0, reg_df["order"].max() * 1.15)
-    fig.tight_layout()
-    fig.savefig(os.path.join(out_dir, "aeroportos_por_regiao.png"), dpi=150)
-    plt.close(fig)
+    ax.set_ylabel("Grau (conexões diretas)", fontsize=11)
+    ax.tick_params(axis="x", rotation=15)
+    _save_fig(fig, out_dir, "grau_por_regiao_boxplot.png")
 
-    # ── 3. Densidade por regiao (EXPLANATORIA) ─────────────────────
-    reg_sorted = reg_df.sort_values("density", ascending=False)
-    fig, ax = plt.subplots(figsize=(9, 5))
-    bars = ax.bar(reg_sorted["region"], reg_sorted["density"],
-                  color=[region_palette.get(r, "#94a3b8") for r in reg_sorted["region"]],
-                  edgecolor="#0f172a", linewidth=0.8)
-    ax.bar_label(bars, fmt="%.3f", padding=4, fontsize=10)
-    ax.set_title("Densidade da Malha Aérea por Região\n"
-                 "(Centro-Oeste lidera: poucas cidades, mas muito interconectadas)",
-                 fontsize=13, pad=12)
+    # ── 2. Densidade ego por regiao (violin) ─────────────────────────
+    fig, ax = plt.subplots(figsize=(10, 5))
+    sns.violinplot(
+        data=ego_df, x="regiao", y="densidade_ego", hue="regiao",
+        order=region_cats, hue_order=region_cats, palette=region_palette,
+        ax=ax, inner="quartile", cut=0, dodge=False, legend=False,
+    )
+    ax.set_title(
+        "Densidade da Ego-Rede por Região\n"
+        "(quão interconectados estão os vizinhos de cada aeroporto)",
+        fontsize=13, pad=12,
+    )
     ax.set_xlabel("Região", fontsize=11)
-    ax.set_ylabel("Densidade do Subgrafo Regional", fontsize=11)
-    ax.set_ylim(0, reg_sorted["density"].max() * 1.18)
-    patches = [mpatches.Patch(color=c, label=r) for r, c in region_palette.items()]
-    ax.legend(handles=patches, title="Região", fontsize=9, title_fontsize=9,
-              loc="upper right")
-    fig.tight_layout()
-    fig.savefig(os.path.join(out_dir, "densidade_por_regiao.png"), dpi=150)
-    plt.close(fig)
+    ax.set_ylabel("Densidade da ego-rede", fontsize=11)
+    ax.tick_params(axis="x", rotation=15)
+    _save_fig(fig, out_dir, "densidade_ego_por_regiao_violin.png")
 
-    # ── 4. Top 10 mais conectados (EXPLANATORIA) ───────────────────
-    top_10 = ego_df.nlargest(10, "grau").sort_values("grau")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    bars = ax.barh(top_10["aeroporto"], top_10["grau"],
-                   color="#38bdf8", edgecolor="#0f172a", linewidth=0.8)
-    ax.bar_label(bars, padding=4, fontsize=10)
-    ax.set_title("Top 10 Aeroportos com Maior Número de Conexões\n"
-                 "(BEL e CWB lideram — hubs regionais com alta conectividade)",
-                 fontsize=13, pad=12)
-    ax.set_xlabel("Grau (número de conexões diretas)", fontsize=11)
+    # ── 3. Composicao tipos de conexao por regiao (barras empilhadas) ─
+    tipo_by_region = (
+        adj_df.groupby(["regiao_origem", "tipo"])
+        .size()
+        .unstack(fill_value=0)
+    )
+    for col in ["hub_nacional", "hub_regional", "regional"]:
+        if col not in tipo_by_region.columns:
+            tipo_by_region[col] = 0
+    tipo_by_region = tipo_by_region[["hub_nacional", "hub_regional", "regional"]]
+    tipo_by_region = tipo_by_region.reindex(
+        [r for r in REGION_ORDER if r in tipo_by_region.index]
+    )
+    tipo_pct = tipo_by_region.div(tipo_by_region.sum(axis=1), axis=0) * 100
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bottom = None
+    tipo_colors = [EDGE_COLORS[t] for t in ["hub_nacional", "hub_regional", "regional"]]
+    for i, tipo in enumerate(["hub_nacional", "hub_regional", "regional"]):
+        values = tipo_pct[tipo].values
+        ax.bar(
+            tipo_pct.index, values, bottom=bottom,
+            label=_TIPO_LABELS[tipo], color=tipo_colors[i],
+            edgecolor="#0f172a", linewidth=0.6,
+        )
+        bottom = values if bottom is None else bottom + values
+    ax.set_title(
+        "Composição dos Tipos de Conexão por Região de Origem\n"
+        "(participação percentual das arestas que partem de cada região)",
+        fontsize=13, pad=12,
+    )
+    ax.set_xlabel("Região de origem", fontsize=11)
+    ax.set_ylabel("Participação (%)", fontsize=11)
+    ax.set_ylim(0, 100)
+    ax.legend(title="Tipo de conexão", fontsize=9, title_fontsize=9)
+    ax.tick_params(axis="x", rotation=15)
+    _save_fig(fig, out_dir, "composicao_tipos_conexao_por_regiao.png")
+
+    # ── 4. Peso (duracao) por tipo de conexao (boxplot) ──────────────
+    fig, ax = plt.subplots(figsize=(9, 5))
+    tipo_order = ["hub_nacional", "hub_regional", "regional"]
+    tipo_colors_map = {t: EDGE_COLORS[t] for t in tipo_order}
+    sns.boxplot(
+        data=adj_df, x="tipo", y="peso", hue="tipo", order=tipo_order,
+        hue_order=tipo_order, palette=tipo_colors_map,
+        ax=ax, linewidth=1.2, dodge=False, legend=False,
+    )
+    ax.set_xticks(range(len(tipo_order)))
+    ax.set_xticklabels([_TIPO_LABELS[t] for t in tipo_order])
+    ax.set_title(
+        "Duração Estimada das Conexões por Tipo\n"
+        "(peso em minutos: distância / 800 km/h + 30 min de manobra)",
+        fontsize=13, pad=12,
+    )
+    ax.set_xlabel("Tipo de conexão", fontsize=11)
+    ax.set_ylabel("Duração estimada (min)", fontsize=11)
+    _save_fig(fig, out_dir, "peso_conexoes_por_tipo_boxplot.png")
+
+    # ── 5. Top 15 hubs por grau ──────────────────────────────────────
+    top_15 = ego_df.nlargest(15, "grau").sort_values("grau")
+    fig, ax = plt.subplots(figsize=(10, 7))
+    bar_colors = [
+        region_palette.get(r, "#94a3b8") for r in top_15["regiao"]
+    ]
+    bars = ax.barh(
+        top_15["aeroporto"], top_15["grau"],
+        color=bar_colors, edgecolor="#0f172a", linewidth=0.8,
+    )
+    ax.bar_label(bars, padding=4, fontsize=9)
+    if len(bars) > 0:
+        bars[-1].set_edgecolor("#f97316")
+        bars[-1].set_linewidth(2.5)
+    ax.set_title(
+        "Top 15 Aeroportos com Maior Grau\n"
+        "(hubs com mais conexões diretas na malha)",
+        fontsize=13, pad=12,
+    )
+    ax.set_xlabel("Grau (conexões diretas)", fontsize=11)
     ax.set_ylabel("Aeroporto (IATA)", fontsize=11)
-    ax.set_xlim(0, top_10["grau"].max() * 1.15)
-    # Highlight top 1
-    bars[-1].set_color("#f97316")
-    fig.tight_layout()
-    fig.savefig(os.path.join(out_dir, "top_10_conectados.png"), dpi=150)
-    plt.close(fig)
+    patches = [mpatches.Patch(color=c, label=r) for r, c in region_palette.items()]
+    ax.legend(handles=patches, title="Região", fontsize=8, title_fontsize=8,
+              loc="lower right")
+    _save_fig(fig, out_dir, "top_15_hubs_grau.png")
 
-    print("Visualizações analíticas geradas em out/")
+    # ── 6. Grau vs densidade ego (scatter) ───────────────────────────
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for reg in region_cats:
+        subset = ego_df[ego_df["regiao"] == reg]
+        ax.scatter(
+            subset["grau"], subset["densidade_ego"],
+            label=reg, color=region_palette.get(reg, "#94a3b8"),
+            alpha=0.75, s=50, edgecolors="#0f172a", linewidths=0.4,
+        )
+    top_grau = ego_df.nlargest(3, "grau")
+    for _, row in top_grau.iterrows():
+        ax.annotate(
+            row["aeroporto"],
+            (row["grau"], row["densidade_ego"]),
+            fontsize=8, xytext=(4, 4), textcoords="offset points",
+        )
+    ax.set_title(
+        "Relação entre Grau e Densidade da Ego-Rede\n"
+        "(canto superior direito: hubs altamente conectados e coesos)",
+        fontsize=13, pad=12,
+    )
+    ax.set_xlabel("Grau", fontsize=11)
+    ax.set_ylabel("Densidade da ego-rede", fontsize=11)
+    ax.legend(title="Região", fontsize=9, title_fontsize=9)
+    _save_fig(fig, out_dir, "relacao_grau_vs_densidade_ego.png")
+
+    # ── 7. Distribuicao tempo rotas minimas ──────────────────────────
+    valid_routes = routes_df[routes_df["custo"] > 0].copy()
+    fig, ax = plt.subplots(figsize=(10, 5))
+    if not valid_routes.empty:
+        sns.histplot(
+            valid_routes["custo"], bins=min(8, len(valid_routes)),
+            kde=len(valid_routes) > 2, color="#38bdf8", ax=ax,
+            edgecolor="#0f172a", linewidth=0.5,
+        )
+        mean_cost = valid_routes["custo"].mean()
+        ax.axvline(
+            mean_cost, color="#f97316", linestyle="--", linewidth=1.5,
+            label=f"Média ({mean_cost:.0f} min)",
+        )
+        ax.legend(fontsize=10)
+    else:
+        ax.text(0.5, 0.5, "Sem rotas válidas", ha="center", va="center",
+                transform=ax.transAxes)
+    ax.set_title(
+        "Distribuição do Tempo de Caminhos Mínimos\n"
+        "(custo total em minutos para pares em rotas.csv)",
+        fontsize=13, pad=12,
+    )
+    ax.set_xlabel("Tempo total do caminho mínimo (min)", fontsize=11)
+    ax.set_ylabel("Frequência", fontsize=11)
+    _save_fig(fig, out_dir, "distribuicao_tempo_rotas_minimas.png")
+
+    # ── 8. Heatmap media peso origem-destino por regiao ──────────────
+    heatmap_df = (
+        adj_df.groupby(["regiao_origem", "regiao_destino"])["peso"]
+        .mean()
+        .unstack()
+    )
+    heatmap_df = heatmap_df.reindex(
+        index=[r for r in REGION_ORDER if r in heatmap_df.index],
+        columns=[r for r in REGION_ORDER if r in heatmap_df.columns],
+    )
+
+    fig, ax = plt.subplots(figsize=(9, 7))
+    if heatmap_df.size > 0:
+        sns.heatmap(
+            heatmap_df, annot=True, fmt=".0f", cmap="YlOrRd",
+            linewidths=0.5, linecolor="#334155", ax=ax,
+            cbar_kws={"label": "Duração média (min)"},
+        )
+    ax.set_title(
+        "Duração Média das Conexões entre Regiões\n"
+        "(origem nas linhas, destino nas colunas)",
+        fontsize=13, pad=12,
+    )
+    ax.set_xlabel("Região de destino", fontsize=11)
+    ax.set_ylabel("Região de origem", fontsize=11)
+    _save_fig(fig, out_dir, "heatmap_media_peso_origem_destino_regiao.png")
+
+    print("8 visualizações analíticas geradas em out/")

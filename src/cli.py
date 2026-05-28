@@ -62,7 +62,8 @@ def main():
     print("Generating visualizations...")
     from .viz import generate_interactive_graph, generate_path_tree, generate_exploratory_plots
     generate_interactive_graph(graph, ego_data, os.path.join(args.out, "grafo_interativo.html"), mandatory_paths)
-    generate_exploratory_plots(args.out)
+    data_dir = os.path.dirname(args.dataset) or "data"
+    generate_exploratory_plots(args.out, data_dir=data_dir)
 
     if mandatory_paths:
         generate_path_tree(graph, mandatory_paths, os.path.join(args.out, "arvore_percurso.html"))
