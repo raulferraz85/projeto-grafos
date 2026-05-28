@@ -1,28 +1,126 @@
 import { useMemo, useState } from "react";
-import type { AppData, Route } from "../types";
+import type { AppData, Edge, Route } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
-import { EM_DASH, formatMetric, formatNumber } from "../lib/format";
+import { EM_DASH, formatNumber } from "../lib/format";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
+import { AirportSearch } from "../components/AirportSearch";
 
 interface Props {
   data: AppData;
   dataStatus: DataStatus;
 }
 
+type Tab = "search" | "calculated";
+
+const MANDATORY = new Set(["REC-POA", "MAO-GRU"]);
+
+function routeKey(r: Route) {
+  return `${r.origin}-${r.destination}`;
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+}
+
+// ── Dijkstra (TypeScript, frontend) ───────────────────────────────────────────
+function runDijkstra(
+  edges: Edge[],
+  allIatas: string[],
+  source: string,
+  target: string,
+): { path: string[]; cost: number } | null {
+  if (source === target) return { path: [source], cost: 0 };
+
+  const adj: Record<string, { node: string; weight: number }[]> = {};
+  for (const iata of allIatas) adj[iata] = [];
+  for (const e of edges) {
+    adj[e.source]?.push({ node: e.target, weight: e.weight });
+    adj[e.target]?.push({ node: e.source, weight: e.weight });
+  }
+
+  const dist: Record<string, number> = {};
+  const prev: Record<string, string | null> = {};
+  for (const iata of allIatas) { dist[iata] = Infinity; prev[iata] = null; }
+  dist[source] = 0;
+
+  const visited = new Set<string>();
+  // Priority queue simples — 128 nós, instantâneo
+  const pq: [number, string][] = [[0, source]];
+
+  while (pq.length > 0) {
+    pq.sort((a, b) => a[0] - b[0]);
+    const [d, u] = pq.shift()!;
+    if (visited.has(u)) continue;
+    visited.add(u);
+    if (u === target) break;
+    for (const { node: v, weight } of adj[u] ?? []) {
+      if (visited.has(v)) continue;
+      const alt = d + weight;
+      if (alt < dist[v]) {
+        dist[v] = alt;
+        prev[v] = u;
+        pq.push([alt, v]);
+      }
+    }
+  }
+
+  if (!isFinite(dist[target])) return null;
+
+  const path: string[] = [];
+  let curr: string | null = target;
+  while (curr) { path.unshift(curr); curr = prev[curr]; }
+  return { path, cost: dist[target] };
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 export function RoutesPage({ data, dataStatus }: Props) {
-  const { routes, airports } = data;
-  const empty = routes.length === 0;
+  const { routes, airports, edges } = data;
+  const live = dataStatus === "live";
 
   const airportByIata = useMemo(
     () => Object.fromEntries(airports.map((a) => [a.iata, a])),
-    [airports]
+    [airports],
   );
+  const cityFor = (iata: string) => airportByIata[iata]?.city ?? iata;
 
-  const [origin, setOrigin] = useState(routes[0]?.origin ?? "");
-  const [destination, setDestination] = useState(routes[0]?.destination ?? "");
+  const edgeLookup = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const e of edges) {
+      m[`${e.source}-${e.target}`] = e.weight;
+      m[`${e.target}-${e.source}`] = e.weight;
+    }
+    return m;
+  }, [edges]);
+
+  const [tab, setTab] = useState<Tab>("search");
+
+  // ── Search tab state ─────────────────────────────────────────────
+  const [searchOrigin, setSearchOrigin] = useState(airports[0]?.iata ?? "");
+  const [searchDest,   setSearchDest]   = useState(airports[1]?.iata ?? "");
+  const [searchResult, setSearchResult] = useState<{
+    path: string[];
+    cost: number;
+  } | null>(null);
+  const [searched, setSearched] = useState(false);
+
+  function handleSearch() {
+    const result = runDijkstra(edges, airports.map((a) => a.iata), searchOrigin, searchDest);
+    setSearchResult(result);
+    setSearched(true);
+  }
+
+  // ── Calculated tab state ─────────────────────────────────────────
+  const [selectedKey, setSelectedKey] = useState<string>(
+    routes[0] ? routeKey(routes[0]) : "",
+  );
   const [filter, setFilter] = useState("");
 
+  const selected = routes.find((r) => routeKey(r) === selectedKey) ?? null;
   const filtered = routes.filter((r) => {
     if (!filter) return true;
     const q = filter.toLowerCase();
@@ -34,174 +132,302 @@ export function RoutesPage({ data, dataStatus }: Props) {
     );
   });
 
-  const selected = routes.find(
-    (r) => r.origin === origin && r.destination === destination
-  );
-
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Rotas"
         description="Caminhos mínimos calculados com Dijkstra entre pares de aeroportos."
       />
 
-      {empty ? (
-        <div className="card mb-6 text-sm text-neutral-600">
-          <p>
-            Nenhuma rota calculada. Gere{" "}
-            <code className="rounded bg-neutral-100 px-1 text-xs">out/distancias_rotas.csv</code>{" "}
-            com{" "}
-            <code className="rounded bg-neutral-100 px-1 text-xs">./prepare.sh</code>
-            {dataStatus === "partial" && " (métricas de out/ ausentes)"}.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium text-neutral-600">Origem</span>
-              <select
-                className="input font-mono"
-                value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-              >
-                {uniqueOrigins(routes).map((o) => (
-                  <option key={o} value={o}>
-                    {o} · {airportByIata[o]?.city ?? ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium text-neutral-600">Destino</span>
-              <select
-                className="input font-mono"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-              >
-                {routes
-                  .filter((r) => r.origin === origin)
-                  .map((r) => r.destination)
-                  .filter((d, i, arr) => arr.indexOf(d) === i)
-                  .map((d) => (
-                    <option key={d} value={d}>
-                      {d} · {airportByIata[d]?.city ?? ""}
-                    </option>
-                  ))}
-              </select>
-            </label>
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-neutral-200">
+        {(
+          [
+            { id: "search" as Tab,     label: "Pesquisar rota" },
+            { id: "calculated" as Tab, label: "Rotas calculadas" },
+          ] as { id: Tab; label: string }[]
+        ).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+              tab === t.id
+                ? "border-neutral-900 text-neutral-900"
+                : "border-transparent text-neutral-500 hover:text-neutral-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── SEARCH TAB ───────────────────────────────────────────── */}
+      {tab === "search" && (
+        <div className="space-y-5">
+          {!live && (
+            <p className="text-sm text-neutral-500">
+              Execute <code className="rounded bg-neutral-100 px-1 text-xs">make pipeline</code> para
+              carregar o grafo completo.
+            </p>
+          )}
+
+          {/* Airport search inputs */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AirportSearch
+              airports={airports}
+              value={searchOrigin}
+              onChange={(iata) => { setSearchOrigin(iata); setSearched(false); }}
+              label="Origem"
+              exclude={searchDest}
+            />
+            <AirportSearch
+              airports={airports}
+              value={searchDest}
+              onChange={(iata) => { setSearchDest(iata); setSearched(false); }}
+              label="Destino"
+              exclude={searchOrigin}
+            />
           </div>
 
-          {selected && (
-            <div className="card mb-6">
-              <RouteDetail
-                route={selected}
-                cityFor={(iata) => airportByIata[iata]?.city ?? iata}
-              />
+          <button
+            onClick={handleSearch}
+            disabled={!live || searchOrigin === searchDest}
+            className="btn-primary disabled:opacity-40"
+          >
+            Calcular caminho mínimo
+          </button>
+
+          {/* Result */}
+          {searched && (
+            <div className="card space-y-4">
+              {searchResult ? (
+                <>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-lg font-semibold">{searchOrigin}</span>
+                        <span className="text-neutral-400">→</span>
+                        <span className="font-mono text-lg font-semibold">{searchDest}</span>
+                      </div>
+                      <p className="text-sm text-neutral-500">
+                        {cityFor(searchOrigin)} → {cityFor(searchDest)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <Chip label="Duração"    value={formatDuration(searchResult.cost)} />
+                      <Chip label="Saltos"     value={String(searchResult.path.length - 1)} />
+                      <Chip label="Aeroportos" value={String(searchResult.path.length)} />
+                    </div>
+                  </div>
+                  <PathGraph
+                    path={searchResult.path}
+                    cityFor={cityFor}
+                    edgeLookup={edgeLookup}
+                  />
+                  <p className="text-xs text-neutral-400">
+                    Algoritmo: Dijkstra · Pesos = duração estimada do voo em minutos
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-neutral-500">
+                  Nenhum caminho encontrado entre {searchOrigin} e {searchDest}.
+                </p>
+              )}
             </div>
           )}
-        </>
+        </div>
       )}
 
-      <input
-        className="input mb-3"
-        placeholder="Buscar por IATA ou cidade…"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        disabled={empty}
-      />
+      {/* ── CALCULATED TAB ───────────────────────────────────────── */}
+      {tab === "calculated" && (
+        <div className="space-y-5">
+          {/* Detail card */}
+          {selected && live && (
+            <div className="card space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-lg font-semibold">{selected.origin}</span>
+                    <span className="text-neutral-400">→</span>
+                    <span className="font-mono text-lg font-semibold">{selected.destination}</span>
+                    {MANDATORY.has(routeKey(selected)) && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                        Obrigatória
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-neutral-500">
+                    {cityFor(selected.origin)} → {cityFor(selected.destination)}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Chip label="Duração"    value={selected.reachable ? formatDuration(selected.cost) : EM_DASH} />
+                  <Chip label="Saltos"     value={selected.reachable ? String(selected.hops) : EM_DASH} />
+                  <Chip label="Aeroportos" value={selected.reachable ? String(selected.path.length) : EM_DASH} />
+                </div>
+              </div>
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Origem</th>
-              <th>Destino</th>
-              <th>Caminho</th>
-              <th>Saltos</th>
-              <th>Custo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <EmptyTableRow colSpan={5}>
-                {empty
-                  ? "Nenhuma rota em data.json. Execute o pipeline Python."
-                  : "Nenhuma rota corresponde à busca."}
-              </EmptyTableRow>
-            ) : (
-              filtered.map((r) => {
-                const active = r.origin === origin && r.destination === destination;
-                return (
-                  <tr
-                    key={`${r.origin}-${r.destination}`}
-                    onClick={() => {
-                      setOrigin(r.origin);
-                      setDestination(r.destination);
-                    }}
-                    className={`cursor-pointer ${active ? "bg-neutral-100" : "hover:bg-neutral-50"}`}
-                  >
-                    <td className="font-mono">{r.origin}</td>
-                    <td className="font-mono">{r.destination}</td>
-                    <td className="max-w-xs truncate text-neutral-600">
-                      {r.path.length > 0 ? r.path.join(" → ") : EM_DASH}
-                    </td>
-                    <td>{formatMetric(r.hops)}</td>
-                    <td className="font-mono">
-                      {r.reachable ? formatNumber(r.cost, 0) : EM_DASH}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+              {selected.path.length > 0 ? (
+                <PathGraph path={selected.path} cityFor={cityFor} edgeLookup={edgeLookup} />
+              ) : (
+                <p className="text-sm text-neutral-500">Caminho indisponível.</p>
+              )}
+            </div>
+          )}
+
+          {/* Search filter */}
+          <input
+            className="input"
+            placeholder="Buscar por IATA ou cidade…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+
+          {/* Table */}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Origem</th>
+                  <th>Destino</th>
+                  <th>Caminho</th>
+                  <th>Duração</th>
+                  <th>Saltos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!live ? (
+                  <EmptyTableRow colSpan={5}>
+                    Execute{" "}
+                    <code className="rounded bg-neutral-100 px-1 text-xs">make pipeline</code>.
+                  </EmptyTableRow>
+                ) : filtered.length === 0 ? (
+                  <EmptyTableRow colSpan={5}>Nenhuma rota encontrada.</EmptyTableRow>
+                ) : (
+                  filtered.map((r) => {
+                    const key = routeKey(r);
+                    const active = key === selectedKey;
+                    return (
+                      <tr
+                        key={key}
+                        onClick={() => setSelectedKey(key)}
+                        className={`cursor-pointer transition-colors ${
+                          active ? "bg-neutral-100" : "hover:bg-neutral-50"
+                        }`}
+                      >
+                        <td>
+                          <span className="font-mono font-semibold">{r.origin}</span>
+                          <span className="block text-xs text-neutral-400">{cityFor(r.origin)}</span>
+                        </td>
+                        <td>
+                          <span className="font-mono font-semibold">{r.destination}</span>
+                          <span className="block text-xs text-neutral-400">{cityFor(r.destination)}</span>
+                        </td>
+                        <td className="max-w-xs">
+                          <span className="text-neutral-600">
+                            {r.path.length > 0 ? r.path.join(" → ") : EM_DASH}
+                          </span>
+                          {MANDATORY.has(key) && (
+                            <span className="ml-2 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs font-semibold text-blue-700">
+                              ✦
+                            </span>
+                          )}
+                        </td>
+                        <td className="font-mono">
+                          {r.reachable ? formatDuration(r.cost) : EM_DASH}
+                        </td>
+                        <td className="text-neutral-600">
+                          {r.reachable ? formatNumber(r.hops, 0) : EM_DASH}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs text-neutral-400">
+            ✦ Rotas obrigatórias do enunciado (Recife → Porto Alegre e Manaus → São Paulo).
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PathGraph ─────────────────────────────────────────────────────────────────
+function PathGraph({
+  path,
+  cityFor,
+  edgeLookup,
+}: {
+  path: string[];
+  cityFor: (iata: string) => string;
+  edgeLookup: Record<string, number>;
+}) {
+  return (
+    <div className="overflow-x-auto pb-2">
+      <div className="flex min-w-max items-center">
+        {path.map((iata, i) => {
+          const isFirst = i === 0;
+          const isLast  = i === path.length - 1;
+          const weight  = i < path.length - 1
+            ? edgeLookup[`${iata}-${path[i + 1]}`]
+            : undefined;
+
+          return (
+            <div key={`${iata}-${i}`} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-full font-mono text-sm font-bold text-white shadow-sm ${
+                    isFirst ? "bg-blue-500" : isLast ? "bg-orange-500" : "bg-neutral-500"
+                  }`}
+                >
+                  {iata}
+                </div>
+                <span className="mt-1 max-w-[72px] text-center text-xs leading-tight text-neutral-500">
+                  {cityFor(iata)}
+                </span>
+              </div>
+
+              {!isLast && (
+                <div className="mx-2 flex min-w-[80px] flex-col items-center">
+                  <span className="mb-1 text-xs text-neutral-400">
+                    {weight !== undefined ? formatDuration(weight) : ""}
+                  </span>
+                  <div className="flex w-full items-center">
+                    <div className="h-px flex-1 bg-neutral-300" />
+                    <span className="text-xs text-neutral-300">▶</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 flex gap-4 text-xs text-neutral-500">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" />Origem
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-neutral-500" />Escala
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />Destino
+        </span>
       </div>
     </div>
   );
 }
 
-function uniqueOrigins(routes: { origin: string }[]) {
-  const seen = new Set<string>();
-  return routes
-    .filter((r) => {
-      if (seen.has(r.origin)) return false;
-      seen.add(r.origin);
-      return true;
-    })
-    .map((r) => r.origin);
-}
-
-function RouteDetail({
-  route,
-  cityFor,
-}: {
-  route: Route;
-  cityFor: (iata: string) => string;
-}) {
+// ── Chip ──────────────────────────────────────────────────────────────────────
+function Chip({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <p className="text-sm text-neutral-600">
-        Custo:{" "}
-        <strong>{route.reachable ? formatNumber(route.cost, 0) : EM_DASH}</strong>
-        {" · "}
-        Saltos: <strong>{formatMetric(route.hops)}</strong>
-        {" · "}
-        Aeroportos no caminho: <strong>{formatMetric(route.path.length)}</strong>
-      </p>
-      {route.path.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500">Caminho indisponível.</p>
-      ) : (
-        <ol className="mt-4 space-y-2">
-          {route.path.map((iata, idx) => (
-            <li key={`${iata}-${idx}`} className="flex gap-3 text-sm">
-              <span className="w-6 text-neutral-400">{idx + 1}.</span>
-              <span className="font-mono font-medium">{iata}</span>
-              <span className="text-neutral-600">{cityFor(iata)}</span>
-            </li>
-          ))}
-        </ol>
-      )}
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-center">
+      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="font-mono text-sm font-semibold">{value}</p>
     </div>
   );
 }

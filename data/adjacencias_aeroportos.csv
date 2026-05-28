@@ -1,427 +1,427 @@
-origem.destino.tipo_conexao.justificativa.peso
-"BEL.BSB.voo_direto.ANAC.151"
-"BEL.CNF.voo_direto.ANAC.187"
-"BEL.CWB.voo_direto.ANAC.231"
-"BEL.MAO.voo_direto.ANAC.127"
-"BEL.FOR.voo_direto.ANAC.115"
-"BEL.GIG.voo_direto.ANAC.214"
-"BEL.GRU.voo_direto.ANAC.215"
-"BEL.VCP.voo_direto.ANAC.211"
-"BEL.POA.voo_direto.ANAC.270"
-"BEL.REC.voo_direto.ANAC.156"
-"BEL.SDU.voo_direto.ANAC.215"
-"BEL.CGH.voo_direto.ANAC.216"
-"BEL.SSA.voo_direto.ANAC.158"
-"BSB.CNF.voo_direto.ANAC.74"
-"BSB.CWB.voo_direto.ANAC.111"
-"BSB.MAO.voo_direto.ANAC.176"
-"BSB.FOR.voo_direto.ANAC.157"
-"BSB.GIG.voo_direto.ANAC.99"
-"BSB.GRU.voo_direto.ANAC.94"
-"BSB.VCP.voo_direto.ANAC.90"
-"BSB.POA.voo_direto.ANAC.150"
-"BSB.REC.voo_direto.ANAC.154"
-"BSB.SDU.voo_direto.ANAC.100"
-"BSB.CGH.voo_direto.ANAC.95"
-"BSB.SSA.voo_direto.ANAC.111"
-"CNF.CWB.voo_direto.ANAC.93"
-"CNF.MAO.voo_direto.ANAC.221"
-"CNF.FOR.voo_direto.ANAC.169"
-"CNF.GIG.voo_direto.ANAC.57"
-"CNF.GRU.voo_direto.ANAC.67"
-"CNF.VCP.voo_direto.ANAC.67"
-"CNF.POA.voo_direto.ANAC.132"
-"CNF.REC.voo_direto.ANAC.151"
-"CNF.SDU.voo_direto.ANAC.58"
-"CNF.CGH.voo_direto.ANAC.69"
-"CNF.SSA.voo_direto.ANAC.102"
-"CWB.MAO.voo_direto.ANAC.237"
-"CWB.FOR.voo_direto.ANAC.230"
-"CWB.GIG.voo_direto.ANAC.80"
-"CWB.GRU.voo_direto.ANAC.57"
-"CWB.VCP.voo_direto.ANAC.56"
-"CWB.POA.voo_direto.ANAC.70"
-"CWB.REC.voo_direto.ANAC.214"
-"CWB.SDU.voo_direto.ANAC.81"
-"CWB.CGH.voo_direto.ANAC.55"
-"CWB.SSA.voo_direto.ANAC.165"
-"MAO.FOR.voo_direto.ANAC.209"
-"MAO.GIG.voo_direto.ANAC.244"
-"MAO.GRU.voo_direto.ANAC.232"
-"MAO.VCP.voo_direto.ANAC.227"
-"MAO.POA.voo_direto.ANAC.265"
-"MAO.REC.voo_direto.ANAC.243"
-"MAO.SDU.voo_direto.ANAC.245"
-"MAO.CGH.voo_direto.ANAC.233"
-"MAO.SSA.voo_direto.ANAC.227"
-"FOR.GIG.voo_direto.ANAC.193"
-"FOR.GRU.voo_direto.ANAC.206"
-"FOR.VCP.voo_direto.ANAC.205"
-"FOR.POA.voo_direto.ANAC.270"
-"FOR.REC.voo_direto.ANAC.77"
-"FOR.SDU.voo_direto.ANAC.194"
-"FOR.CGH.voo_direto.ANAC.208"
-"FOR.SSA.voo_direto.ANAC.106"
-"GIG.GRU.voo_direto.ANAC.55"
-"GIG.VCP.voo_direto.ANAC.60"
-"GIG.POA.voo_direto.ANAC.114"
-"GIG.REC.voo_direto.ANAC.169"
-"GIG.SDU.voo_direto.ANAC.31"
-"GIG.CGH.voo_direto.ANAC.57"
-"GIG.SSA.voo_direto.ANAC.121"
-"GRU.VCP.voo_direto.ANAC.36"
-"GRU.POA.voo_direto.ANAC.95"
-"GRU.REC.voo_direto.ANAC.188"
-"GRU.SDU.voo_direto.ANAC.56"
-"GRU.CGH.voo_direto.ANAC.32"
-"GRU.SSA.voo_direto.ANAC.139"
-"VCP.POA.voo_direto.ANAC.96"
-"VCP.REC.voo_direto.ANAC.188"
-"VCP.SDU.voo_direto.ANAC.61"
-"VCP.CGH.voo_direto.ANAC.36"
-"VCP.SSA.voo_direto.ANAC.139"
-"POA.REC.voo_direto.ANAC.252"
-"POA.SDU.voo_direto.ANAC.114"
-"POA.CGH.voo_direto.ANAC.93"
-"POA.SSA.voo_direto.ANAC.204"
-"REC.SDU.voo_direto.ANAC.170"
-"REC.CGH.voo_direto.ANAC.190"
-"REC.SSA.voo_direto.ANAC.79"
-"SDU.CGH.voo_direto.ANAC.57"
-"SDU.SSA.voo_direto.ANAC.122"
-"CGH.SSA.voo_direto.ANAC.141"
-"VDC.SSA.voo_direto.ANAC.57"
-"VDC.CNF.voo_direto.ANAC.76"
-"VDC.JJD.voo_direto.ANAC.130"
-"CDJ.BEL.voo_direto.ANAC.89"
-"CDJ.BSB.voo_direto.ANAC.94"
-"CDJ.RBR.voo_direto.ANAC.184"
-"ARX.FOR.voo_direto.ANAC.39"
-"ARX.REC.voo_direto.ANAC.68"
-"JTC.VCP.voo_direto.ANAC.46"
-"JTC.CGH.voo_direto.ANAC.52"
-"JTC.ARU.voo_direto.ANAC.44"
-"AQA.VCP.voo_direto.ANAC.43"
-"AQA.GRU.voo_direto.ANAC.49"
-"AQA.MII.voo_direto.ANAC.44"
-"AJU.SSA.voo_direto.ANAC.49"
-"AJU.REC.voo_direto.ANAC.60"
-"AFL.MAO.voo_direto.ANAC.96"
-"AFL.BSB.voo_direto.ANAC.113"
-"AFL.CGB.voo_direto.ANAC.78"
-"ARU.VCP.voo_direto.ANAC.60"
-"ARU.CGH.voo_direto.ANAC.66"
-"ARU.MII.voo_direto.ANAC.40"
-"AAX.CNF.voo_direto.ANAC.54"
-"AAX.VCP.voo_direto.ANAC.59"
-"AAX.GUJ.voo_direto.ANAC.60"
-"BGX.POA.voo_direto.ANAC.54"
-"BGX.CWB.voo_direto.ANAC.91"
-"BGX.LDB.voo_direto.ANAC.101"
-"PLU.CNF.voo_direto.ANAC.32"
-"PLU.GIG.voo_direto.ANAC.55"
-"BFH.CWB.voo_direto.ANAC.31"
-"BFH.CGH.voo_direto.ANAC.55"
-"BFH.URG.voo_direto.ANAC.98"
-"BAT.VCP.voo_direto.ANAC.53"
-"BAT.GRU.voo_direto.ANAC.59"
-"BAT.AQA.voo_direto.ANAC.41"
-"BVB.MAO.voo_direto.ANAC.79"
-"BVB.BEL.voo_direto.ANAC.138"
-"BVB.SJL.voo_direto.ANAC.88"
-"BPG.BSB.voo_direto.ANAC.66"
-"BPG.VCP.voo_direto.ANAC.102"
-"BPG.GYN.voo_direto.ANAC.56"
-"BZC.SDU.voo_direto.ANAC.39"
-"BZC.GIG.voo_direto.ANAC.40"
-"BZC.UBA.voo_direto.ANAC.83"
-"CAC.CWB.voo_direto.ANAC.63"
-"CAC.POA.voo_direto.ANAC.75"
-"CAC.LAJ.voo_direto.ANAC.63"
-"CGR.CWB.voo_direto.ANAC.90"
-"CGR.VCP.voo_direto.ANAC.92"
-"CGR.MQH.voo_direto.ANAC.107"
-"XAP.POA.voo_direto.ANAC.56"
-"XAP.CWB.voo_direto.ANAC.59"
-"XAP.PGZ.voo_direto.ANAC.55"
-"CLN.BEL.voo_direto.ANAC.80"
-"CLN.BSB.voo_direto.ANAC.101"
-"CLN.MVF.voo_direto.ANAC.116"
-"CKS.BEL.voo_direto.ANAC.72"
-"CKS.BSB.voo_direto.ANAC.113"
-"CKS.ITA.voo_direto.ANAC.105"
-"CCM.POA.voo_direto.ANAC.47"
-"CCM.CWB.voo_direto.ANAC.57"
-"CCM.EEA.voo_direto.ANAC.41"
-"QNS.POA.voo_direto.ANAC.30"
-"QNS.CWB.voo_direto.ANAC.70"
-"QNS.CCM.voo_direto.ANAC.46"
-"CAW.SDU.voo_direto.ANAC.48"
-"CAW.GIG.voo_direto.ANAC.48"
-"CAW.RRJ.voo_direto.ANAC.49"
-"CMG.BSB.voo_direto.ANAC.112"
-"CMG.CWB.voo_direto.ANAC.115"
-"CMG.PMG.voo_direto.ANAC.63"
-"CRQ.SSA.voo_direto.ANAC.70"
-"CRQ.CNF.voo_direto.ANAC.71"
-"CRQ.PHB.voo_direto.ANAC.155"
-"CXJ.POA.voo_direto.ANAC.37"
-"CXJ.CWB.voo_direto.ANAC.64"
-"CXJ.PGZ.voo_direto.ANAC.64"
-"CGB.BSB.voo_direto.ANAC.96"
-"CGB.VCP.voo_direto.ANAC.124"
-"CGB.MQH.voo_direto.ANAC.96"
-"CZS.MAO.voo_direto.ANAC.142"
-"CZS.BEL.voo_direto.ANAC.238"
-"CZS.BVH.voo_direto.ANAC.142"
-"PPB.CWB.voo_direto.ANAC.63"
-"PPB.VCP.voo_direto.ANAC.64"
-"PPB.AAX.voo_direto.ANAC.71"
-"JCR.MAO.voo_direto.ANAC.63"
-"JCR.BEL.voo_direto.ANAC.117"
-"JCR.ITB.voo_direto.ANAC.52"
-"IGU.CWB.voo_direto.ANAC.70"
-"IGU.POA.voo_direto.ANAC.74"
-"IGU.PFB.voo_direto.ANAC.57"
-"FLN.CWB.voo_direto.ANAC.48"
-"FLN.POA.voo_direto.ANAC.57"
-"FLN.EEA.voo_direto.ANAC.43"
-"FEN.REC.voo_direto.ANAC.71"
-"FEN.FOR.voo_direto.ANAC.81"
-"FEN.AJU.voo_direto.ANAC.101"
-"GJM.MAO.voo_direto.ANAC.108"
-"GJM.BSB.voo_direto.ANAC.177"
-"GJM.TFF.voo_direto.ANAC.92"
-"GYN.BSB.voo_direto.ANAC.42"
-"GYN.CNF.voo_direto.ANAC.79"
-"GYN.CGR.voo_direto.ANAC.84"
-"GVR.CNF.voo_direto.ANAC.47"
-"GVR.GIG.voo_direto.ANAC.64"
-"GVR.CGH.voo_direto.ANAC.84"
-"GUJ.GRU.voo_direto.ANAC.41"
-"GUJ.CGH.voo_direto.ANAC.43"
-"GUJ.UDI.voo_direto.ANAC.70"
-"ATM.BEL.voo_direto.ANAC.65"
-"ATM.MAO.voo_direto.ANAC.95"
-"ATM.TMT.voo_direto.ANAC.68"
-"ITA.MAO.voo_direto.ANAC.43"
-"ITA.BEL.voo_direto.ANAC.115"
-"ITA.JCR.voo_direto.ANAC.57"
-"ITB.MAO.voo_direto.ANAC.65"
-"ITB.BEL.voo_direto.ANAC.97"
-"ITB.ATM.voo_direto.ANAC.62"
-"IOS.SSA.voo_direto.ANAC.47"
-"IOS.CNF.voo_direto.ANAC.86"
-"IOS.NAT.voo_direto.ANAC.111"
-"IPN.CNF.voo_direto.ANAC.42"
-"IPN.GIG.voo_direto.ANAC.58"
-"IPN.SSZ.voo_direto.ANAC.77"
-"IMP.BEL.voo_direto.ANAC.66"
-"IMP.FOR.voo_direto.ANAC.106"
-"IMP.LAZ.voo_direto.ANAC.103"
-"JJD.FOR.voo_direto.ANAC.47"
-"JJD.REC.voo_direto.ANAC.93"
-"JDF.GIG.voo_direto.ANAC.39"
-"JDF.SDU.voo_direto.ANAC.39"
-"JDF.MEA.voo_direto.ANAC.43"
-"JHF.VCP.voo_direto.ANAC.34"
-"JHF.CGH.voo_direto.ANAC.34"
-"JHF.VIX.voo_direto.ANAC.89"
-"JPA.REC.voo_direto.ANAC.38"
-"JPA.FOR.voo_direto.ANAC.71"
-"JPA.PNZ.voo_direto.ANAC.80"
-"RRJ.SDU.voo_direto.ANAC.32"
-"RRJ.GIG.voo_direto.ANAC.32"
-"JOI.CWB.voo_direto.ANAC.36"
-"JOI.CGH.voo_direto.ANAC.57"
-"JOI.FLN.voo_direto.ANAC.42"
-"CPV.REC.voo_direto.ANAC.41"
-"CPV.FOR.voo_direto.ANAC.66"
-"CPV.THE.voo_direto.ANAC.90"
-"LAJ.POA.voo_direto.ANAC.50"
-"LAJ.CWB.voo_direto.ANAC.51"
-"LAJ.MGF.voo_direto.ANAC.68"
-"LIP.VCP.voo_direto.ANAC.53"
-"LIP.CGH.voo_direto.ANAC.59"
-"LIP.SDU.voo_direto.ANAC.82"
-"LDB.CWB.voo_direto.ANAC.54"
-"LDB.VCP.voo_direto.ANAC.61"
-"LDB.NVT.voo_direto.ANAC.65"
-"LAZ.SSA.voo_direto.ANAC.71"
-"LAZ.BSB.voo_direto.ANAC.72"
-"LAZ.JJD.voo_direto.ANAC.120"
-"MAB.BEL.voo_direto.ANAC.64"
-"MAB.BSB.voo_direto.ANAC.118"
-"MAB.OYK.voo_direto.ANAC.110"
-"MQH.BSB.voo_direto.ANAC.49"
-"MQH.CNF.voo_direto.ANAC.91"
-"MQH.CMG.voo_direto.ANAC.118"
-"MEU.BEL.voo_direto.ANAC.65"
-"MEU.MAO.voo_direto.ANAC.95"
-"MEU.PLL.voo_direto.ANAC.94"
-"MEA.SDU.voo_direto.ANAC.42"
-"MEA.GIG.voo_direto.ANAC.42"
-"MEA.BAT.voo_direto.ANAC.85"
-"MGF.CWB.voo_direto.ANAC.58"
-"MGF.VCP.voo_direto.ANAC.68"
-"MGF.NVT.voo_direto.ANAC.68"
-"MOC.CNF.voo_direto.ANAC.54"
-"MOC.BSB.voo_direto.ANAC.64"
-"MOC.GIG.voo_direto.ANAC.81"
-"MII.VCP.voo_direto.ANAC.53"
-"MII.CGH.voo_direto.ANAC.58"
-"MII.SJK.voo_direto.ANAC.62"
-"PLL.MAO.voo_direto.ANAC.31"
-"PLL.BEL.voo_direto.ANAC.127"
-"PLL.MAB.voo_direto.ANAC.122"
-"MCZ.REC.voo_direto.ANAC.44"
-"MCZ.SSA.voo_direto.ANAC.65"
-"MCP.BEL.voo_direto.ANAC.55"
-"MCP.MAO.voo_direto.ANAC.109"
-"MCP.AUX.voo_direto.ANAC.95"
-"MVF.FOR.voo_direto.ANAC.45"
-"MVF.REC.voo_direto.ANAC.62"
-"MVF.FEN.voo_direto.ANAC.73"
-"RTE.CGH.voo_direto.ANAC.31"
-"RTE.GRU.voo_direto.ANAC.31"
-"RTE.UDI.voo_direto.ANAC.71"
-"MNX.MAO.voo_direto.ANAC.55"
-"MNX.BEL.voo_direto.ANAC.143"
-"MNX.CZS.voo_direto.ANAC.126"
-"NVT.CWB.voo_direto.ANAC.42"
-"NVT.CGH.voo_direto.ANAC.61"
-"NVT.CXJ.voo_direto.ANAC.57"
-"GEL.POA.voo_direto.ANAC.56"
-"GEL.CWB.voo_direto.ANAC.74"
-"GEL.RIA.voo_direto.ANAC.42"
-"OYK.BEL.voo_direto.ANAC.82"
-"OYK.MAO.voo_direto.ANAC.120"
-"OYK.TRQ.voo_direto.ANAC.217"
-"PHB.FOR.voo_direto.ANAC.58"
-"PHB.BEL.voo_direto.ANAC.88"
-"PHB.SLZ.voo_direto.ANAC.51"
-"POO.VCP.voo_direto.ANAC.41"
-"POO.GRU.voo_direto.ANAC.43"
-"POO.PLU.voo_direto.ANAC.56"
-"PFB.POA.voo_direto.ANAC.47"
-"PFB.CWB.voo_direto.ANAC.63"
-"PFB.EEA.voo_direto.ANAC.45"
-"PGZ.CWB.voo_direto.ANAC.38"
-"PGZ.VCP.voo_direto.ANAC.59"
-"PGZ.TEC.voo_direto.ANAC.38"
-"PMW.BSB.voo_direto.ANAC.77"
-"PMW.BEL.voo_direto.ANAC.104"
-"PMW.MCP.voo_direto.ANAC.119"
-"PET.POA.voo_direto.ANAC.47"
-"PET.CWB.voo_direto.ANAC.87"
-"PET.TEC.voo_direto.ANAC.93"
-"PNZ.SSA.voo_direto.ANAC.65"
-"PNZ.REC.voo_direto.ANAC.78"
-"PNZ.LAZ.voo_direto.ANAC.70"
-"PNB.BSB.voo_direto.ANAC.73"
-"PNB.BEL.voo_direto.ANAC.108"
-"PNB.MEU.voo_direto.ANAC.119"
-"PMG.CWB.voo_direto.ANAC.86"
-"PMG.VCP.voo_direto.ANAC.96"
-"PMG.BPG.voo_direto.ANAC.92"
-"BPS.SSA.voo_direto.ANAC.60"
-"BPS.CNF.voo_direto.ANAC.77"
-"BPS.THE.voo_direto.ANAC.130"
-"PVH.MAO.voo_direto.ANAC.87"
-"PVH.BEL.voo_direto.ANAC.172"
-"PVH.TRQ.voo_direto.ANAC.87"
-"RBR.MAO.voo_direto.ANAC.116"
-"RBR.BSB.voo_direto.ANAC.200"
-"RBR.GJM.voo_direto.ANAC.53"
-"ROO.BSB.voo_direto.ANAC.85"
-"ROO.VCP.voo_direto.ANAC.110"
-"ROO.AFL.voo_direto.ANAC.87"
-"RAO.VCP.voo_direto.ANAC.46"
-"RAO.GRU.voo_direto.ANAC.52"
-"RAO.IZA.voo_direto.ANAC.66"
-"SNZ.GIG.voo_direto.ANAC.34"
-"SNZ.SDU.voo_direto.ANAC.34"
-"SNZ.JTC.voo_direto.ANAC.72"
-"NAT.REC.voo_direto.ANAC.50"
-"NAT.FOR.voo_direto.ANAC.61"
-"NAT.CRQ.voo_direto.ANAC.134"
-"SJK.GRU.voo_direto.ANAC.35"
-"SJK.CGH.voo_direto.ANAC.37"
-"SJK.GUJ.voo_direto.ANAC.36"
-"SLZ.BEL.voo_direto.ANAC.67"
-"SLZ.FOR.voo_direto.ANAC.79"
-"SLZ.IOS.voo_direto.ANAC.141"
-"RIA.POA.voo_direto.ANAC.48"
-"RIA.CWB.voo_direto.ANAC.78"
-"RIA.CXJ.voo_direto.ANAC.49"
-"STM.MAO.voo_direto.ANAC.74"
-"STM.BEL.voo_direto.ANAC.83"
-"STM.MNX.voo_direto.ANAC.91"
-"SJP.VCP.voo_direto.ANAC.55"
-"SJP.GRU.voo_direto.ANAC.61"
-"SJP.SDU.voo_direto.ANAC.81"
-"SSZ.CGH.voo_direto.ANAC.34"
-"SSZ.GRU.voo_direto.ANAC.34"
-"SSZ.SNZ.voo_direto.ANAC.51"
-"TMT.MAO.voo_direto.ANAC.63"
-"TMT.BEL.voo_direto.ANAC.96"
-"TMT.PNB.voo_direto.ANAC.132"
-"THE.FOR.voo_direto.ANAC.67"
-"THE.BEL.voo_direto.ANAC.86"
-"TFF.MAO.voo_direto.ANAC.69"
-"TFF.BEL.voo_direto.ANAC.166"
-"TFF.TMT.voo_direto.ANAC.101"
-"TRQ.MAO.voo_direto.ANAC.129"
-"TRQ.BEL.voo_direto.ANAC.224"
-"TRQ.RBR.voo_direto.ANAC.58"
-"TEC.CWB.voo_direto.ANAC.45"
-"TEC.VCP.voo_direto.ANAC.59"
-"TEC.BGX.voo_direto.ANAC.94"
-"TBT.MAO.voo_direto.ANAC.113"
-"TBT.BEL.voo_direto.ANAC.210"
-"TBT.PLL.voo_direto.ANAC.113"
-"TUR.BEL.voo_direto.ANAC.53"
-"TUR.MAO.voo_direto.ANAC.116"
-"TUR.PLL.voo_direto.ANAC.116"
-"SJL.MAO.voo_direto.ANAC.93"
-"SJL.BEL.voo_direto.ANAC.185"
-"SJL.PLL.voo_direto.ANAC.93"
-"PAV.SSA.voo_direto.ANAC.59"
-"PAV.REC.voo_direto.ANAC.59"
-"PAV.FEC.voo_direto.ANAC.54"
-"URG.POA.voo_direto.ANAC.72"
-"URG.CWB.voo_direto.ANAC.98"
-"URG.EEA.voo_direto.ANAC.82"
-"UDI.BSB.voo_direto.ANAC.55"
-"UDI.CNF.voo_direto.ANAC.64"
-"UDI.PPB.voo_direto.ANAC.67"
-"UBA.VCP.voo_direto.ANAC.58"
-"UBA.CNF.voo_direto.ANAC.61"
-"UBA.JHF.voo_direto.ANAC.61"
-"VAG.GRU.voo_direto.ANAC.47"
-"VAG.VCP.voo_direto.ANAC.47"
-"VAG.SNZ.voo_direto.ANAC.48"
-"BVH.MAO.voo_direto.ANAC.111"
-"BVH.BSB.voo_direto.ANAC.132"
-"BVH.OYK.voo_direto.ANAC.184"
-"VIX.CNF.voo_direto.ANAC.59"
-"VIX.GIG.voo_direto.ANAC.61"
-"VIX.PPB.voo_direto.ANAC.118"
-"IZA.GIG.voo_direto.ANAC.41"
-"IZA.SDU.voo_direto.ANAC.42"
-"IZA.MII.voo_direto.ANAC.83"
-"FEC.SSA.voo_direto.ANAC.38"
-"FEC.REC.voo_direto.ANAC.77"
-"FEC.LAZ.voo_direto.ANAC.68"
-"JSO.FOR.voo_direto.ANAC.44"
-"JSO.REC.voo_direto.ANAC.88"
-"JSO.JPA.voo_direto.ANAC.83"
-"EEA.CWB.voo_direto.ANAC.50"
-"EEA.POA.voo_direto.ANAC.51"
-"EEA.CAC.voo_direto.ANAC.62"
-"LHN.CNF.voo_direto.ANAC.61"
-"LHN.GIG.voo_direto.ANAC.68"
-"LHN.JDF.voo_direto.ANAC.63"
-"AUX.BEL.voo_direto.ANAC.79"
-"AUX.BSB.voo_direto.ANAC.102"
-"AUX.ATM.voo_direto.ANAC.77"
+origem,destino,tipo_conexao,justificativa,peso
+BEL,BSB,hub_nacional,conexao entre hubs nacionais de alta demanda,151
+BEL,CNF,hub_nacional,conexao entre hubs nacionais de alta demanda,187
+BEL,CWB,hub_nacional,conexao entre hubs nacionais de alta demanda,231
+BEL,MAO,hub_nacional,conexao entre hubs nacionais de alta demanda,127
+BEL,FOR,hub_nacional,conexao entre hubs nacionais de alta demanda,115
+BEL,GIG,hub_nacional,conexao entre hubs nacionais de alta demanda,214
+BEL,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,215
+BEL,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,211
+BEL,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,270
+BEL,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,156
+BEL,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,215
+BEL,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,216
+BEL,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,158
+BSB,CNF,hub_nacional,conexao entre hubs nacionais de alta demanda,74
+BSB,CWB,hub_nacional,conexao entre hubs nacionais de alta demanda,111
+BSB,MAO,hub_nacional,conexao entre hubs nacionais de alta demanda,176
+BSB,FOR,hub_nacional,conexao entre hubs nacionais de alta demanda,157
+BSB,GIG,hub_nacional,conexao entre hubs nacionais de alta demanda,99
+BSB,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,94
+BSB,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,90
+BSB,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,150
+BSB,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,154
+BSB,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,100
+BSB,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,95
+BSB,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,111
+CNF,CWB,hub_nacional,conexao entre hubs nacionais de alta demanda,93
+CNF,MAO,hub_nacional,conexao entre hubs nacionais de alta demanda,221
+CNF,FOR,hub_nacional,conexao entre hubs nacionais de alta demanda,169
+CNF,GIG,hub_nacional,conexao entre hubs nacionais de alta demanda,57
+CNF,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,67
+CNF,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,67
+CNF,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,132
+CNF,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,151
+CNF,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,58
+CNF,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,69
+CNF,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,102
+CWB,MAO,hub_nacional,conexao entre hubs nacionais de alta demanda,237
+CWB,FOR,hub_nacional,conexao entre hubs nacionais de alta demanda,230
+CWB,GIG,hub_nacional,conexao entre hubs nacionais de alta demanda,80
+CWB,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,57
+CWB,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,56
+CWB,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,70
+CWB,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,214
+CWB,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,81
+CWB,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,55
+CWB,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,165
+MAO,FOR,hub_nacional,conexao entre hubs nacionais de alta demanda,209
+MAO,GIG,hub_nacional,conexao entre hubs nacionais de alta demanda,244
+MAO,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,232
+MAO,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,227
+MAO,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,265
+MAO,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,243
+MAO,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,245
+MAO,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,233
+MAO,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,227
+FOR,GIG,hub_nacional,conexao entre hubs nacionais de alta demanda,193
+FOR,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,206
+FOR,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,205
+FOR,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,270
+FOR,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,77
+FOR,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,194
+FOR,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,208
+FOR,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,106
+GIG,GRU,hub_nacional,conexao entre hubs nacionais de alta demanda,55
+GIG,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,60
+GIG,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,114
+GIG,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,169
+GIG,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,31
+GIG,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,57
+GIG,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,121
+GRU,VCP,hub_nacional,conexao entre hubs nacionais de alta demanda,36
+GRU,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,95
+GRU,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,188
+GRU,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,56
+GRU,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,32
+GRU,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,139
+VCP,POA,hub_nacional,conexao entre hubs nacionais de alta demanda,96
+VCP,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,188
+VCP,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,61
+VCP,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,36
+VCP,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,139
+POA,REC,hub_nacional,conexao entre hubs nacionais de alta demanda,252
+POA,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,114
+POA,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,93
+POA,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,204
+REC,SDU,hub_nacional,conexao entre hubs nacionais de alta demanda,170
+REC,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,190
+REC,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,79
+SDU,CGH,hub_nacional,conexao entre hubs nacionais de alta demanda,57
+SDU,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,122
+CGH,SSA,hub_nacional,conexao entre hubs nacionais de alta demanda,141
+VDC,SSA,hub_regional,conexao ao hub nacional mais proximo,57
+VDC,CNF,hub_regional,conexao ao hub nacional mais proximo,76
+VDC,JJD,regional,voo regional entre aeroportos da mesma regiao,130
+CDJ,BEL,hub_regional,conexao ao hub nacional mais proximo,89
+CDJ,BSB,hub_regional,conexao ao hub nacional mais proximo,94
+CDJ,RBR,regional,voo regional entre aeroportos da mesma regiao,184
+ARX,FOR,hub_regional,conexao ao hub nacional mais proximo,39
+ARX,REC,hub_regional,conexao ao hub nacional mais proximo,68
+JTC,VCP,hub_regional,conexao ao hub nacional mais proximo,46
+JTC,CGH,hub_regional,conexao ao hub nacional mais proximo,52
+JTC,ARU,regional,voo regional entre aeroportos da mesma regiao,44
+AQA,VCP,hub_regional,conexao ao hub nacional mais proximo,43
+AQA,GRU,hub_regional,conexao ao hub nacional mais proximo,49
+AQA,MII,regional,voo regional entre aeroportos da mesma regiao,44
+AJU,SSA,hub_regional,conexao ao hub nacional mais proximo,49
+AJU,REC,hub_regional,conexao ao hub nacional mais proximo,60
+AFL,MAO,hub_regional,conexao ao hub nacional mais proximo,96
+AFL,BSB,hub_regional,conexao ao hub nacional mais proximo,113
+AFL,CGB,regional,voo regional entre aeroportos da mesma regiao,78
+ARU,VCP,hub_regional,conexao ao hub nacional mais proximo,60
+ARU,CGH,hub_regional,conexao ao hub nacional mais proximo,66
+ARU,MII,regional,voo regional entre aeroportos da mesma regiao,40
+AAX,CNF,hub_regional,conexao ao hub nacional mais proximo,54
+AAX,VCP,hub_regional,conexao ao hub nacional mais proximo,59
+AAX,GUJ,regional,voo regional entre aeroportos da mesma regiao,60
+BGX,POA,hub_regional,conexao ao hub nacional mais proximo,54
+BGX,CWB,hub_regional,conexao ao hub nacional mais proximo,91
+BGX,LDB,regional,voo regional entre aeroportos da mesma regiao,101
+PLU,CNF,hub_regional,conexao ao hub nacional mais proximo,32
+PLU,GIG,hub_regional,conexao ao hub nacional mais proximo,55
+BFH,CWB,hub_regional,conexao ao hub nacional mais proximo,31
+BFH,CGH,hub_regional,conexao ao hub nacional mais proximo,55
+BFH,URG,regional,voo regional entre aeroportos da mesma regiao,98
+BAT,VCP,hub_regional,conexao ao hub nacional mais proximo,53
+BAT,GRU,hub_regional,conexao ao hub nacional mais proximo,59
+BAT,AQA,regional,voo regional entre aeroportos da mesma regiao,41
+BVB,MAO,hub_regional,conexao ao hub nacional mais proximo,79
+BVB,BEL,hub_regional,conexao ao hub nacional mais proximo,138
+BVB,SJL,regional,voo regional entre aeroportos da mesma regiao,88
+BPG,BSB,hub_regional,conexao ao hub nacional mais proximo,66
+BPG,VCP,hub_regional,conexao ao hub nacional mais proximo,102
+BPG,GYN,regional,voo regional entre aeroportos da mesma regiao,56
+BZC,SDU,hub_regional,conexao ao hub nacional mais proximo,39
+BZC,GIG,hub_regional,conexao ao hub nacional mais proximo,40
+BZC,UBA,regional,voo regional entre aeroportos da mesma regiao,83
+CAC,CWB,hub_regional,conexao ao hub nacional mais proximo,63
+CAC,POA,hub_regional,conexao ao hub nacional mais proximo,75
+CAC,LAJ,regional,voo regional entre aeroportos da mesma regiao,63
+CGR,CWB,hub_regional,conexao ao hub nacional mais proximo,90
+CGR,VCP,hub_regional,conexao ao hub nacional mais proximo,92
+CGR,MQH,regional,voo regional entre aeroportos da mesma regiao,107
+XAP,POA,hub_regional,conexao ao hub nacional mais proximo,56
+XAP,CWB,hub_regional,conexao ao hub nacional mais proximo,59
+XAP,PGZ,regional,voo regional entre aeroportos da mesma regiao,55
+CLN,BEL,hub_regional,conexao ao hub nacional mais proximo,80
+CLN,BSB,hub_regional,conexao ao hub nacional mais proximo,101
+CLN,MVF,regional,voo regional entre aeroportos da mesma regiao,116
+CKS,BEL,hub_regional,conexao ao hub nacional mais proximo,72
+CKS,BSB,hub_regional,conexao ao hub nacional mais proximo,113
+CKS,ITA,regional,voo regional entre aeroportos da mesma regiao,105
+CCM,POA,hub_regional,conexao ao hub nacional mais proximo,47
+CCM,CWB,hub_regional,conexao ao hub nacional mais proximo,57
+CCM,EEA,regional,voo regional entre aeroportos da mesma regiao,41
+QNS,POA,hub_regional,conexao ao hub nacional mais proximo,30
+QNS,CWB,hub_regional,conexao ao hub nacional mais proximo,70
+QNS,CCM,regional,voo regional entre aeroportos da mesma regiao,46
+CAW,SDU,hub_regional,conexao ao hub nacional mais proximo,48
+CAW,GIG,hub_regional,conexao ao hub nacional mais proximo,48
+CAW,RRJ,regional,voo regional entre aeroportos da mesma regiao,49
+CMG,BSB,hub_regional,conexao ao hub nacional mais proximo,112
+CMG,CWB,hub_regional,conexao ao hub nacional mais proximo,115
+CMG,PMG,regional,voo regional entre aeroportos da mesma regiao,63
+CRQ,SSA,hub_regional,conexao ao hub nacional mais proximo,70
+CRQ,CNF,hub_regional,conexao ao hub nacional mais proximo,71
+CRQ,PHB,regional,voo regional entre aeroportos da mesma regiao,155
+CXJ,POA,hub_regional,conexao ao hub nacional mais proximo,37
+CXJ,CWB,hub_regional,conexao ao hub nacional mais proximo,64
+CXJ,PGZ,regional,voo regional entre aeroportos da mesma regiao,64
+CGB,BSB,hub_regional,conexao ao hub nacional mais proximo,96
+CGB,VCP,hub_regional,conexao ao hub nacional mais proximo,124
+CGB,MQH,regional,voo regional entre aeroportos da mesma regiao,96
+CZS,MAO,hub_regional,conexao ao hub nacional mais proximo,142
+CZS,BEL,hub_regional,conexao ao hub nacional mais proximo,238
+CZS,BVH,regional,voo regional entre aeroportos da mesma regiao,142
+PPB,CWB,hub_regional,conexao ao hub nacional mais proximo,63
+PPB,VCP,hub_regional,conexao ao hub nacional mais proximo,64
+PPB,AAX,regional,voo regional entre aeroportos da mesma regiao,71
+JCR,MAO,hub_regional,conexao ao hub nacional mais proximo,63
+JCR,BEL,hub_regional,conexao ao hub nacional mais proximo,117
+JCR,ITB,regional,voo regional entre aeroportos da mesma regiao,52
+IGU,CWB,hub_regional,conexao ao hub nacional mais proximo,70
+IGU,POA,hub_regional,conexao ao hub nacional mais proximo,74
+IGU,PFB,regional,voo regional entre aeroportos da mesma regiao,57
+FLN,CWB,hub_regional,conexao ao hub nacional mais proximo,48
+FLN,POA,hub_regional,conexao ao hub nacional mais proximo,57
+FLN,EEA,regional,voo regional entre aeroportos da mesma regiao,43
+FEN,REC,hub_regional,conexao ao hub nacional mais proximo,71
+FEN,FOR,hub_regional,conexao ao hub nacional mais proximo,81
+FEN,AJU,regional,voo regional entre aeroportos da mesma regiao,101
+GJM,MAO,hub_regional,conexao ao hub nacional mais proximo,108
+GJM,BSB,hub_regional,conexao ao hub nacional mais proximo,177
+GJM,TFF,regional,voo regional entre aeroportos da mesma regiao,92
+GYN,BSB,hub_regional,conexao ao hub nacional mais proximo,42
+GYN,CNF,hub_regional,conexao ao hub nacional mais proximo,79
+GYN,CGR,regional,voo regional entre aeroportos da mesma regiao,84
+GVR,CNF,hub_regional,conexao ao hub nacional mais proximo,47
+GVR,GIG,hub_regional,conexao ao hub nacional mais proximo,64
+GVR,CGH,hub_regional,conexao ao hub nacional mais proximo,84
+GUJ,GRU,hub_regional,conexao ao hub nacional mais proximo,41
+GUJ,CGH,hub_regional,conexao ao hub nacional mais proximo,43
+GUJ,UDI,regional,voo regional entre aeroportos da mesma regiao,70
+ATM,BEL,hub_regional,conexao ao hub nacional mais proximo,65
+ATM,MAO,hub_regional,conexao ao hub nacional mais proximo,95
+ATM,TMT,regional,voo regional entre aeroportos da mesma regiao,68
+ITA,MAO,hub_regional,conexao ao hub nacional mais proximo,43
+ITA,BEL,hub_regional,conexao ao hub nacional mais proximo,115
+ITA,JCR,regional,voo regional entre aeroportos da mesma regiao,57
+ITB,MAO,hub_regional,conexao ao hub nacional mais proximo,65
+ITB,BEL,hub_regional,conexao ao hub nacional mais proximo,97
+ITB,ATM,regional,voo regional entre aeroportos da mesma regiao,62
+IOS,SSA,hub_regional,conexao ao hub nacional mais proximo,47
+IOS,CNF,hub_regional,conexao ao hub nacional mais proximo,86
+IOS,NAT,regional,voo regional entre aeroportos da mesma regiao,111
+IPN,CNF,hub_regional,conexao ao hub nacional mais proximo,42
+IPN,GIG,hub_regional,conexao ao hub nacional mais proximo,58
+IPN,SSZ,regional,voo regional entre aeroportos da mesma regiao,77
+IMP,BEL,hub_regional,conexao ao hub nacional mais proximo,66
+IMP,FOR,hub_regional,conexao ao hub nacional mais proximo,106
+IMP,LAZ,regional,voo regional entre aeroportos da mesma regiao,103
+JJD,FOR,hub_regional,conexao ao hub nacional mais proximo,47
+JJD,REC,hub_regional,conexao ao hub nacional mais proximo,93
+JDF,GIG,hub_regional,conexao ao hub nacional mais proximo,39
+JDF,SDU,hub_regional,conexao ao hub nacional mais proximo,39
+JDF,MEA,regional,voo regional entre aeroportos da mesma regiao,43
+JHF,VCP,hub_regional,conexao ao hub nacional mais proximo,34
+JHF,CGH,hub_regional,conexao ao hub nacional mais proximo,34
+JHF,VIX,regional,voo regional entre aeroportos da mesma regiao,89
+JPA,REC,hub_regional,conexao ao hub nacional mais proximo,38
+JPA,FOR,hub_regional,conexao ao hub nacional mais proximo,71
+JPA,PNZ,regional,voo regional entre aeroportos da mesma regiao,80
+RRJ,SDU,hub_regional,conexao ao hub nacional mais proximo,32
+RRJ,GIG,hub_regional,conexao ao hub nacional mais proximo,32
+JOI,CWB,hub_regional,conexao ao hub nacional mais proximo,36
+JOI,CGH,hub_regional,conexao ao hub nacional mais proximo,57
+JOI,FLN,regional,voo regional entre aeroportos da mesma regiao,42
+CPV,REC,hub_regional,conexao ao hub nacional mais proximo,41
+CPV,FOR,hub_regional,conexao ao hub nacional mais proximo,66
+CPV,THE,regional,voo regional entre aeroportos da mesma regiao,90
+LAJ,POA,hub_regional,conexao ao hub nacional mais proximo,50
+LAJ,CWB,hub_regional,conexao ao hub nacional mais proximo,51
+LAJ,MGF,regional,voo regional entre aeroportos da mesma regiao,68
+LIP,VCP,hub_regional,conexao ao hub nacional mais proximo,53
+LIP,CGH,hub_regional,conexao ao hub nacional mais proximo,59
+LIP,SDU,hub_regional,conexao ao hub nacional mais proximo,82
+LDB,CWB,hub_regional,conexao ao hub nacional mais proximo,54
+LDB,VCP,hub_regional,conexao ao hub nacional mais proximo,61
+LDB,NVT,regional,voo regional entre aeroportos da mesma regiao,65
+LAZ,SSA,hub_regional,conexao ao hub nacional mais proximo,71
+LAZ,BSB,hub_regional,conexao ao hub nacional mais proximo,72
+LAZ,JJD,regional,voo regional entre aeroportos da mesma regiao,120
+MAB,BEL,hub_regional,conexao ao hub nacional mais proximo,64
+MAB,BSB,hub_regional,conexao ao hub nacional mais proximo,118
+MAB,OYK,regional,voo regional entre aeroportos da mesma regiao,110
+MQH,BSB,hub_regional,conexao ao hub nacional mais proximo,49
+MQH,CNF,hub_regional,conexao ao hub nacional mais proximo,91
+MQH,CMG,regional,voo regional entre aeroportos da mesma regiao,118
+MEU,BEL,hub_regional,conexao ao hub nacional mais proximo,65
+MEU,MAO,hub_regional,conexao ao hub nacional mais proximo,95
+MEU,PLL,regional,voo regional entre aeroportos da mesma regiao,94
+MEA,SDU,hub_regional,conexao ao hub nacional mais proximo,42
+MEA,GIG,hub_regional,conexao ao hub nacional mais proximo,42
+MEA,BAT,regional,voo regional entre aeroportos da mesma regiao,85
+MGF,CWB,hub_regional,conexao ao hub nacional mais proximo,58
+MGF,VCP,hub_regional,conexao ao hub nacional mais proximo,68
+MGF,NVT,regional,voo regional entre aeroportos da mesma regiao,68
+MOC,CNF,hub_regional,conexao ao hub nacional mais proximo,54
+MOC,BSB,hub_regional,conexao ao hub nacional mais proximo,64
+MOC,GIG,hub_regional,conexao ao hub nacional mais proximo,81
+MII,VCP,hub_regional,conexao ao hub nacional mais proximo,53
+MII,CGH,hub_regional,conexao ao hub nacional mais proximo,58
+MII,SJK,regional,voo regional entre aeroportos da mesma regiao,62
+PLL,MAO,hub_regional,conexao ao hub nacional mais proximo,31
+PLL,BEL,hub_regional,conexao ao hub nacional mais proximo,127
+PLL,MAB,regional,voo regional entre aeroportos da mesma regiao,122
+MCZ,REC,hub_regional,conexao ao hub nacional mais proximo,44
+MCZ,SSA,hub_regional,conexao ao hub nacional mais proximo,65
+MCP,BEL,hub_regional,conexao ao hub nacional mais proximo,55
+MCP,MAO,hub_regional,conexao ao hub nacional mais proximo,109
+MCP,AUX,regional,voo regional entre aeroportos da mesma regiao,95
+MVF,FOR,hub_regional,conexao ao hub nacional mais proximo,45
+MVF,REC,hub_regional,conexao ao hub nacional mais proximo,62
+MVF,FEN,regional,voo regional entre aeroportos da mesma regiao,73
+RTE,CGH,hub_regional,conexao ao hub nacional mais proximo,31
+RTE,GRU,hub_regional,conexao ao hub nacional mais proximo,31
+RTE,UDI,regional,voo regional entre aeroportos da mesma regiao,71
+MNX,MAO,hub_regional,conexao ao hub nacional mais proximo,55
+MNX,BEL,hub_regional,conexao ao hub nacional mais proximo,143
+MNX,CZS,regional,voo regional entre aeroportos da mesma regiao,126
+NVT,CWB,hub_regional,conexao ao hub nacional mais proximo,42
+NVT,CGH,hub_regional,conexao ao hub nacional mais proximo,61
+NVT,CXJ,regional,voo regional entre aeroportos da mesma regiao,57
+GEL,POA,hub_regional,conexao ao hub nacional mais proximo,56
+GEL,CWB,hub_regional,conexao ao hub nacional mais proximo,74
+GEL,RIA,regional,voo regional entre aeroportos da mesma regiao,42
+OYK,BEL,hub_regional,conexao ao hub nacional mais proximo,82
+OYK,MAO,hub_regional,conexao ao hub nacional mais proximo,120
+OYK,TRQ,regional,voo regional entre aeroportos da mesma regiao,217
+PHB,FOR,hub_regional,conexao ao hub nacional mais proximo,58
+PHB,BEL,hub_regional,conexao ao hub nacional mais proximo,88
+PHB,SLZ,regional,voo regional entre aeroportos da mesma regiao,51
+POO,VCP,hub_regional,conexao ao hub nacional mais proximo,41
+POO,GRU,hub_regional,conexao ao hub nacional mais proximo,43
+POO,PLU,regional,voo regional entre aeroportos da mesma regiao,56
+PFB,POA,hub_regional,conexao ao hub nacional mais proximo,47
+PFB,CWB,hub_regional,conexao ao hub nacional mais proximo,63
+PFB,EEA,regional,voo regional entre aeroportos da mesma regiao,45
+PGZ,CWB,hub_regional,conexao ao hub nacional mais proximo,38
+PGZ,VCP,hub_regional,conexao ao hub nacional mais proximo,59
+PGZ,TEC,regional,voo regional entre aeroportos da mesma regiao,38
+PMW,BSB,hub_regional,conexao ao hub nacional mais proximo,77
+PMW,BEL,hub_regional,conexao ao hub nacional mais proximo,104
+PMW,MCP,regional,voo regional entre aeroportos da mesma regiao,119
+PET,POA,hub_regional,conexao ao hub nacional mais proximo,47
+PET,CWB,hub_regional,conexao ao hub nacional mais proximo,87
+PET,TEC,regional,voo regional entre aeroportos da mesma regiao,93
+PNZ,SSA,hub_regional,conexao ao hub nacional mais proximo,65
+PNZ,REC,hub_regional,conexao ao hub nacional mais proximo,78
+PNZ,LAZ,regional,voo regional entre aeroportos da mesma regiao,70
+PNB,BSB,hub_regional,conexao ao hub nacional mais proximo,73
+PNB,BEL,hub_regional,conexao ao hub nacional mais proximo,108
+PNB,MEU,regional,voo regional entre aeroportos da mesma regiao,119
+PMG,CWB,hub_regional,conexao ao hub nacional mais proximo,86
+PMG,VCP,hub_regional,conexao ao hub nacional mais proximo,96
+PMG,BPG,regional,voo regional entre aeroportos da mesma regiao,92
+BPS,SSA,hub_regional,conexao ao hub nacional mais proximo,60
+BPS,CNF,hub_regional,conexao ao hub nacional mais proximo,77
+BPS,THE,regional,voo regional entre aeroportos da mesma regiao,130
+PVH,MAO,hub_regional,conexao ao hub nacional mais proximo,87
+PVH,BEL,hub_regional,conexao ao hub nacional mais proximo,172
+PVH,TRQ,regional,voo regional entre aeroportos da mesma regiao,87
+RBR,MAO,hub_regional,conexao ao hub nacional mais proximo,116
+RBR,BSB,hub_regional,conexao ao hub nacional mais proximo,200
+RBR,GJM,regional,voo regional entre aeroportos da mesma regiao,53
+ROO,BSB,hub_regional,conexao ao hub nacional mais proximo,85
+ROO,VCP,hub_regional,conexao ao hub nacional mais proximo,110
+ROO,AFL,regional,voo regional entre aeroportos da mesma regiao,87
+RAO,VCP,hub_regional,conexao ao hub nacional mais proximo,46
+RAO,GRU,hub_regional,conexao ao hub nacional mais proximo,52
+RAO,IZA,regional,voo regional entre aeroportos da mesma regiao,66
+SNZ,GIG,hub_regional,conexao ao hub nacional mais proximo,34
+SNZ,SDU,hub_regional,conexao ao hub nacional mais proximo,34
+SNZ,JTC,regional,voo regional entre aeroportos da mesma regiao,72
+NAT,REC,hub_regional,conexao ao hub nacional mais proximo,50
+NAT,FOR,hub_regional,conexao ao hub nacional mais proximo,61
+NAT,CRQ,regional,voo regional entre aeroportos da mesma regiao,134
+SJK,GRU,hub_regional,conexao ao hub nacional mais proximo,35
+SJK,CGH,hub_regional,conexao ao hub nacional mais proximo,37
+SJK,GUJ,regional,voo regional entre aeroportos da mesma regiao,36
+SLZ,BEL,hub_regional,conexao ao hub nacional mais proximo,67
+SLZ,FOR,hub_regional,conexao ao hub nacional mais proximo,79
+SLZ,IOS,regional,voo regional entre aeroportos da mesma regiao,141
+RIA,POA,hub_regional,conexao ao hub nacional mais proximo,48
+RIA,CWB,hub_regional,conexao ao hub nacional mais proximo,78
+RIA,CXJ,regional,voo regional entre aeroportos da mesma regiao,49
+STM,MAO,hub_regional,conexao ao hub nacional mais proximo,74
+STM,BEL,hub_regional,conexao ao hub nacional mais proximo,83
+STM,MNX,regional,voo regional entre aeroportos da mesma regiao,91
+SJP,VCP,hub_regional,conexao ao hub nacional mais proximo,55
+SJP,GRU,hub_regional,conexao ao hub nacional mais proximo,61
+SJP,SDU,hub_regional,conexao ao hub nacional mais proximo,81
+SSZ,CGH,hub_regional,conexao ao hub nacional mais proximo,34
+SSZ,GRU,hub_regional,conexao ao hub nacional mais proximo,34
+SSZ,SNZ,regional,voo regional entre aeroportos da mesma regiao,51
+TMT,MAO,hub_regional,conexao ao hub nacional mais proximo,63
+TMT,BEL,hub_regional,conexao ao hub nacional mais proximo,96
+TMT,PNB,regional,voo regional entre aeroportos da mesma regiao,132
+THE,FOR,hub_regional,conexao ao hub nacional mais proximo,67
+THE,BEL,hub_regional,conexao ao hub nacional mais proximo,86
+TFF,MAO,hub_regional,conexao ao hub nacional mais proximo,69
+TFF,BEL,hub_regional,conexao ao hub nacional mais proximo,166
+TFF,TMT,regional,voo regional entre aeroportos da mesma regiao,101
+TRQ,MAO,hub_regional,conexao ao hub nacional mais proximo,129
+TRQ,BEL,hub_regional,conexao ao hub nacional mais proximo,224
+TRQ,RBR,regional,voo regional entre aeroportos da mesma regiao,58
+TEC,CWB,hub_regional,conexao ao hub nacional mais proximo,45
+TEC,VCP,hub_regional,conexao ao hub nacional mais proximo,59
+TEC,BGX,regional,voo regional entre aeroportos da mesma regiao,94
+TBT,MAO,hub_regional,conexao ao hub nacional mais proximo,113
+TBT,BEL,hub_regional,conexao ao hub nacional mais proximo,210
+TBT,PLL,regional,voo regional entre aeroportos da mesma regiao,113
+TUR,BEL,hub_regional,conexao ao hub nacional mais proximo,53
+TUR,MAO,hub_regional,conexao ao hub nacional mais proximo,116
+TUR,PLL,regional,voo regional entre aeroportos da mesma regiao,116
+SJL,MAO,hub_regional,conexao ao hub nacional mais proximo,93
+SJL,BEL,hub_regional,conexao ao hub nacional mais proximo,185
+SJL,PLL,regional,voo regional entre aeroportos da mesma regiao,93
+PAV,SSA,hub_regional,conexao ao hub nacional mais proximo,59
+PAV,REC,hub_regional,conexao ao hub nacional mais proximo,59
+PAV,FEC,regional,voo regional entre aeroportos da mesma regiao,54
+URG,POA,hub_regional,conexao ao hub nacional mais proximo,72
+URG,CWB,hub_regional,conexao ao hub nacional mais proximo,98
+URG,EEA,regional,voo regional entre aeroportos da mesma regiao,82
+UDI,BSB,hub_regional,conexao ao hub nacional mais proximo,55
+UDI,CNF,hub_regional,conexao ao hub nacional mais proximo,64
+UDI,PPB,regional,voo regional entre aeroportos da mesma regiao,67
+UBA,VCP,hub_regional,conexao ao hub nacional mais proximo,58
+UBA,CNF,hub_regional,conexao ao hub nacional mais proximo,61
+UBA,JHF,regional,voo regional entre aeroportos da mesma regiao,61
+VAG,GRU,hub_regional,conexao ao hub nacional mais proximo,47
+VAG,VCP,hub_regional,conexao ao hub nacional mais proximo,47
+VAG,SNZ,regional,voo regional entre aeroportos da mesma regiao,48
+BVH,MAO,hub_regional,conexao ao hub nacional mais proximo,111
+BVH,BSB,hub_regional,conexao ao hub nacional mais proximo,132
+BVH,OYK,regional,voo regional entre aeroportos da mesma regiao,184
+VIX,CNF,hub_regional,conexao ao hub nacional mais proximo,59
+VIX,GIG,hub_regional,conexao ao hub nacional mais proximo,61
+VIX,PPB,regional,voo regional entre aeroportos da mesma regiao,118
+IZA,GIG,hub_regional,conexao ao hub nacional mais proximo,41
+IZA,SDU,hub_regional,conexao ao hub nacional mais proximo,42
+IZA,MII,regional,voo regional entre aeroportos da mesma regiao,83
+FEC,SSA,hub_regional,conexao ao hub nacional mais proximo,38
+FEC,REC,hub_regional,conexao ao hub nacional mais proximo,77
+FEC,LAZ,regional,voo regional entre aeroportos da mesma regiao,68
+JSO,FOR,hub_regional,conexao ao hub nacional mais proximo,44
+JSO,REC,hub_regional,conexao ao hub nacional mais proximo,88
+JSO,JPA,regional,voo regional entre aeroportos da mesma regiao,83
+EEA,CWB,hub_regional,conexao ao hub nacional mais proximo,50
+EEA,POA,hub_regional,conexao ao hub nacional mais proximo,51
+EEA,CAC,regional,voo regional entre aeroportos da mesma regiao,62
+LHN,CNF,hub_regional,conexao ao hub nacional mais proximo,61
+LHN,GIG,hub_regional,conexao ao hub nacional mais proximo,68
+LHN,JDF,regional,voo regional entre aeroportos da mesma regiao,63
+AUX,BEL,hub_regional,conexao ao hub nacional mais proximo,79
+AUX,BSB,hub_regional,conexao ao hub nacional mais proximo,102
+AUX,ATM,regional,voo regional entre aeroportos da mesma regiao,77

@@ -25,7 +25,7 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
   const updatedLabel =
     dataStatus === "live" ? formatDateTime(data.generatedAt) : EM_DASH;
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <header className="border-b border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <div>
@@ -51,7 +51,7 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
 
       <footer className="border-t border-neutral-200 bg-white">
         <div className="mx-auto max-w-5xl px-4 py-4 text-xs text-neutral-500">

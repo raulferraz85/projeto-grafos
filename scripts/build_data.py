@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -73,73 +74,30 @@ def load_airports() -> list[dict[str, str]]:
     return airports
 
 
-def split_adjacency_line(line: str) -> list[str] | None:
-    """Cada linha do CSV de adjacências é uma string envolvida em aspas, separada
-    por '.' e com aspas duplas escapadas como ``""`` em volta da justificativa.
-    Exemplo: ``"REC.SSA.regional.""mesma região"".1"`` deve virar
-    ``['REC', 'SSA', 'regional', 'mesma região', '1']``.
-    """
-    line = line.strip().lstrip("\ufeff")
-    if not line:
-        return None
-    if line.startswith('"') and line.endswith('"'):
-        line = line[1:-1]
-    line = line.replace('""', '"')
-    fields: list[str] = []
-    buf = ""
-    in_quotes = False
-    for ch in line:
-        if ch == '"':
-            in_quotes = not in_quotes
-            continue
-        if ch == "." and not in_quotes:
-            fields.append(buf)
-            buf = ""
-            continue
-        buf += ch
-    fields.append(buf)
-    return fields
-
-
 def load_edges() -> list[dict[str, Any]]:
-    """Lê as adjacências reais do grafo (não direcionado)."""
+    """Lê as adjacências reais do grafo (formato: origem,destino,tipo_conexao,justificativa,peso)."""
     path = DATA_DIR / "adjacencias_aeroportos.csv"
     edges: list[dict[str, Any]] = []
     if not path.exists():
         return edges
 
-    with path.open("r", encoding="utf-8-sig") as f:
-        lines = f.readlines()
-
-    if not lines:
-        return edges
-
-    for raw in lines[1:]:
-        fields = split_adjacency_line(raw)
-        if not fields or len(fields) < 5:
-            continue
-        origem, destino, tipo, justificativa, peso = (
-            fields[0],
-            fields[1],
-            fields[2],
-            fields[3],
-            fields[4],
-        )
-        try:
-            weight = float(peso)
-        except ValueError:
-            weight = 1.0
-        edges.append(
-            {
-                "source": origem.strip(),
-                "target": destino.strip(),
-                "connectionType": tipo.strip(),
-                "justification": normalize_text(justificativa.strip()),
-                "weight": weight,
-            }
-        )
+    with path.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                weight = float(row.get("peso", 1.0) or 1.0)
+            except ValueError:
+                weight = 1.0
+            edges.append(
+                {
+                    "source": row.get("origem", "").strip(),
+                    "target": row.get("destino", "").strip(),
+                    "connectionType": row.get("tipo_conexao", "").strip(),
+                    "justification": normalize_text(row.get("justificativa", "").strip()),
+                    "weight": weight,
+                }
+            )
     return edges
-
 
 def load_ego() -> list[dict[str, Any]]:
     rows = read_csv(OUT_DIR / "ego_aeroportos.csv")
@@ -293,6 +251,13 @@ def main() -> None:
         f" {payload['stats']['edgeCount']} arestas,"
         f" {payload['stats']['routeCount']} rotas"
     )
+
+    # Copia o grafo interativo para o frontend poder servi-lo como iframe
+    src = OUT_DIR / "grafo_interativo.html"
+    dst = FRONTEND_PUBLIC / "grafo_interativo.html"
+    if src.exists():
+        shutil.copy(src, dst)
+        print(f"grafo_interativo.html copiado → {dst.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

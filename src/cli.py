@@ -47,19 +47,23 @@ def main():
     find_rankings(ego_data)
     route_results = process_routes(graph, routes, args.out)
 
+    # Caminhos obrigatorios (REC->POA e MAO->GRU)
+    mandatory_paths = {}
+    for res in route_results:
+        key = f"{res['origem']}->{res['destino']}"
+        is_mandatory = (
+            (res["origem"] == "REC" and res["destino"] == "POA") or
+            (res["origem"] == "MAO" and res["destino"] == "GRU")
+        )
+        if is_mandatory and res["caminho"] != "N/A":
+            mandatory_paths[key] = res["caminho"].split(" -> ")
+
     # Visualizations
     print("Generating visualizations...")
     from .viz import generate_interactive_graph, generate_path_tree, generate_exploratory_plots
-    generate_interactive_graph(graph, ego_data, os.path.join(args.out, "grafo_interativo.html"))
+    generate_interactive_graph(graph, ego_data, os.path.join(args.out, "grafo_interativo.html"), mandatory_paths)
     generate_exploratory_plots(args.out)
-    
-    mandatory_paths = {}
-    for res in route_results:
-        if (res["origem"] == "REC" and res["destino"] == "POA") or \
-           (res["origem"] == "MAO" and res["destino"] == "GRU"):
-            if res["caminho"] != "N/A":
-                mandatory_paths[f"{res['origem']}->{res['destino']}"] = res["caminho"].split(" -> ")
-    
+
     if mandatory_paths:
         generate_path_tree(graph, mandatory_paths, os.path.join(args.out, "arvore_percurso.html"))
 

@@ -1,3 +1,4 @@
+import csv
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -66,16 +67,24 @@ def main():
     
     connections = []
     processed_pairs = set()
+    hubs_set = set(hubs)
+
+    def get_tipo_justificativa(u, v):
+        if u in hubs_set and v in hubs_set:
+            return 'hub_nacional', 'conexao entre hubs nacionais de alta demanda'
+        elif u in hubs_set or v in hubs_set:
+            return 'hub_regional', 'conexao ao hub nacional mais proximo'
+        else:
+            return 'regional', 'voo regional entre aeroportos da mesma regiao'
 
     def add_conn(u_row, v_row):
         u, v = u_row['iata_code'], v_row['iata_code']
         pair = tuple(sorted((u, v)))
         if u != v and pair not in processed_pairs:
-            weight = get_duration(u_row['latitude_deg'], u_row['longitude_deg'], 
+            weight = get_duration(u_row['latitude_deg'], u_row['longitude_deg'],
                                  v_row['latitude_deg'], v_row['longitude_deg'])
-            # Formato do projeto: "u.v.tipo.justificativa.peso"
-            line = f'"{u}.{v}.voo_direto.ANAC.{weight}"'
-            connections.append(line)
+            tipo, justificativa = get_tipo_justificativa(u, v)
+            connections.append((u, v, tipo, justificativa, weight))
             processed_pairs.add(pair)
 
     hub_df = br_airports[br_airports['iata_code'].isin(hubs)]
@@ -104,12 +113,13 @@ def main():
                 random_neighbor = same_region.sample(1).iloc[0]
                 add_conn(row, random_neighbor)
 
-    # Salvar adjacencias_aeroportos.csv
-    with open(ADJACENCIES_CSV, 'w', encoding='utf-8') as f:
-        f.write("origem.destino.tipo_conexao.justificativa.peso\n")
+    # Salvar adjacencias_aeroportos.csv (formato: origem,destino,tipo_conexao,justificativa,peso)
+    with open(ADJACENCIES_CSV, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['origem', 'destino', 'tipo_conexao', 'justificativa', 'peso'])
         for conn in connections:
-            f.write(conn + "\n")
-    
+            writer.writerow(conn)
+
     print(f"Salvo {len(connections)} conexões em {ADJACENCIES_CSV}")
 
     # 3. Rodar build_data.py para atualizar o frontend

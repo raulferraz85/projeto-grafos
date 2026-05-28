@@ -20,14 +20,18 @@ export default function App() {
     );
   }
 
+  // Todos os componentes ficam montados — só são ocultados via CSS.
+  // Isso preserva o estado local (busca de rotas, filtros, etc.) ao trocar de aba.
+  const show = (p: Page) => (page === p ? "" : "hidden");
+
   return (
     <Layout data={data} page={page} onPageChange={setPage} dataStatus={status}>
       <DataBanner status={status} error={error} />
-      {page === "overview" && <OverviewPage data={data} dataStatus={status} />}
-      {page === "rankings" && <RankingsPage rankings={data.rankings} dataStatus={status} />}
-      {page === "routes" && <RoutesPage data={data} dataStatus={status} />}
-      {page === "graph" && <GraphPage data={data} dataStatus={status} />}
-      {page === "airports" && <AirportsPage airports={data.airports} dataStatus={status} />}
+      <div className={show("overview")}><OverviewPage data={data} dataStatus={status} /></div>
+      <div className={show("rankings")}><RankingsPage rankings={data.rankings} airports={data.airports} dataStatus={status} /></div>
+      <div className={show("routes")}><RoutesPage data={data} dataStatus={status} /></div>
+      <div className={show("graph")}><GraphPage data={data} dataStatus={status} /></div>
+      <div className={show("airports")}><AirportsPage airports={data.airports} dataStatus={status} /></div>
     </Layout>
   );
 }

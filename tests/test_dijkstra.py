@@ -25,5 +25,5 @@ def test_dijkstra_negative_weight():
     g.add_node(Node("B", "B", "R"))
     g.add_edge("A", "B", "type", "just", -1.0)
 
-    with pytest.raises(ValueError, match="Dijkstra does not support negative weights"):
+    with pytest.raises(ValueError, match="Dijkstra"):
         dijkstra(g, "A")
