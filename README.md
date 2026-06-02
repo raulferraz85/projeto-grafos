@@ -115,14 +115,31 @@ python -m src.cli --dataset data/aeroportos_data.csv --alg BELLMAN-FORD --source
 | `distancias_rotas.csv` | Caminhos mínimos (Dijkstra) para os pares em `rotas.csv` |
 | `grafo_interativo.html` | Grafo interativo com busca e destaque de caminhos |
 | `arvore_percurso.html` | Árvore de percurso dos caminhos obrigatórios |
-| `grau_por_regiao_boxplot.png` | Boxplot de grau por região — compara conectividade local |
-| `densidade_ego_por_regiao_violin.png` | Violin plot da densidade de ego-redes por região |
-| `composicao_tipos_conexao_por_regiao.png` | Barras empilhadas: hub nacional / regional / voo regional por região de origem |
-| `peso_conexoes_por_tipo_boxplot.png` | Duração estimada (min) das conexões por tipo |
-| `top_15_hubs_grau.png` | Ranking dos 15 aeroportos com maior grau |
-| `relacao_grau_vs_densidade_ego.png` | Scatter grau × densidade ego (cores por região) |
-| `distribuicao_tempo_rotas_minimas.png` | Histograma dos tempos de caminhos mínimos (rotas.csv) |
-| `heatmap_media_peso_origem_destino_regiao.png` | Heatmap da duração média entre pares de regiões |
+| `grafico_<slug>/` | Bundle analítico: PNG + `analise.md` (ver seção abaixo) |
+
+### Visualizações analíticas (`out/grafico_*/`)
+
+Cada pasta contém a figura e um relatório em Markdown para leitura sem abrir o código:
+
+```text
+out/grafico_<nome>/
+  grafico_<nome>.png   # figura (valores e resumos no desenho)
+  analise.md           # pergunta, métricas, números-chave e interpretação
+```
+
+Geradas por `make pipeline` (etapa `generate_exploratory_plots` em `src/viz.py`).
+
+| Slug | Pergunta | O que ver no PNG |
+|---|---|---|
+| `grafico_grau_por_regiao` | Como o grau médio varia por região? | Barras = média; traço = IQR; mediana no rótulo interno |
+| `grafico_densidade_ego_por_regiao` | Qual região tem ego-redes mais densas? | Média de densidade ego por região com valor no topo |
+| `grafico_composicao_conexoes` | Mix hub nacional / regional / voo por origem? | Barras empilhadas 100% com % nos segmentos ≥ 8% |
+| `grafico_duracao_por_tipo` | Duração típica por tipo de conexão? | Mediana (min) + faixa P25–P75 abaixo de cada barra |
+| `grafico_top_hubs` | Quais hubs concentram conexões? | Top 15 horizontal com grau no fim da barra |
+| `grafico_grau_vs_densidade_ego` | Grau alto implica ego-rede densa? | Scatter por região, r de Pearson, top 5 anotados |
+| `grafico_rotas_minimas` | Tempo de cada rota em `rotas.csv`? | Uma barra por par (não histograma); minutos no fim |
+| `grafico_duracao_entre_regioes` | Duração média entre regiões? | Heatmap anotado; cinza = sem voo direto no dataset |
+| `grafico_metricas_regionais` | Ordem, tamanho e densidade do subgrafo regional? | Três painéis com valores nas barras |
 
 ---
 

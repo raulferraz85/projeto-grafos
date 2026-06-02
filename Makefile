@@ -55,4 +55,5 @@ test: $(VENV)
 # ──────────────────────────────────────────────────────────────────
 clean:
 	@rm -f out/*.json out/*.csv out/*.html out/*.png
+	@rm -rf out/grafico_*
 	@echo "==> out/ limpo."
