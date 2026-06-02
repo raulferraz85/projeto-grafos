@@ -26,13 +26,39 @@ function originalNodeColor(region: string) {
   return REGION_COLORS[region] ?? "#94a3b8";
 }
 
-// Carrega um script externo uma única vez e resolve a Promise quando pronto
+const VIS_SCRIPT =
+  "https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js";
+const VIS_CSS =
+  "https://unpkg.com/vis-network@9.1.2/styles/vis-network.min.css";
+
+function visAvailable(): boolean {
+  const vis = (window as any).vis;
+  return !!(vis?.DataSet && vis?.Network);
+}
+
+// Carrega um script externo uma única vez e resolve quando vis estiver no window
 function loadScript(src: string): Promise<void> {
-  return new Promise((resolve) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+  return new Promise((resolve, reject) => {
+    const finish = () => {
+      if (visAvailable()) resolve();
+      else reject(new Error(`Script loaded but window.vis is missing: ${src}`));
+    };
+
+    const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
+    if (existing) {
+      if (visAvailable()) {
+        resolve();
+        return;
+      }
+      existing.addEventListener("load", finish, { once: true });
+      existing.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
+      return;
+    }
+
     const s = document.createElement("script");
     s.src = src;
-    s.onload = () => resolve();
+    s.onload = finish;
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(s);
   });
 }
@@ -54,7 +80,7 @@ export function GraphPage({ data, dataStatus }: Props) {
   const edgesRef       = useRef<any>(null);
   const origColors     = useRef<Record<string, string>>({});
 
-  const [visReady, setVisReady]   = useState(!!(window as any).vis);
+  const [visReady, setVisReady]   = useState(visAvailable);
   const [search, setSearch]       = useState("");
   const [activeBtn, setActiveBtn] = useState<string | null>(null);
 
@@ -78,12 +104,16 @@ export function GraphPage({ data, dataStatus }: Props) {
     return m;
   }, [edges]);
 
-  // 1. Carrega vis.js do CDN
+  // 1. Carrega vis-network (standalone UMD expõe window.vis.DataSet e .Network)
   useEffect(() => {
-    if ((window as any).vis) { setVisReady(true); return; }
-    loadCss("https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.css");
-    loadScript("https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js")
-      .then(() => setVisReady(true));
+    if (visAvailable()) {
+      setVisReady(true);
+      return;
+    }
+    loadCss(VIS_CSS);
+    loadScript(VIS_SCRIPT)
+      .then(() => setVisReady(true))
+      .catch((err) => console.error("vis-network:", err));
   }, []);
 
   // 2. Inicializa a rede quando vis estiver pronto e dados disponíveis
@@ -91,6 +121,7 @@ export function GraphPage({ data, dataStatus }: Props) {
     if (!visReady || !containerRef.current || airports.length === 0) return;
 
     const vis = (window as any).vis;
+    if (!vis?.DataSet || !vis?.Network) return;
 
     const nodeData = airports.map((a) => {
       const color = originalNodeColor(a.region);
