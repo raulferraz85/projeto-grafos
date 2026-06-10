@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "./hooks/useData";
 import { Layout, type Page } from "./components/Layout";
 import { DataBanner } from "./components/DataBanner";
@@ -14,9 +14,17 @@ export default function App() {
   const { data, loading, error, status } = useData();
   const [page, setPage] = useState<Page>("home");
 
+  useEffect(() => {
+    document.body.classList.toggle("theme-home", page === "home");
+
+    return () => {
+      document.body.classList.remove("theme-home");
+    };
+  }, [page]);
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-neutral-600">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-sm text-slate-300">
         Carregando dados…
       </div>
     );
@@ -31,12 +39,24 @@ export default function App() {
       ) : (
         <>
           <DataBanner status={status} error={error} />
-          <div className={show("overview")}><OverviewPage data={data} dataStatus={status} /></div>
-          <div className={show("rankings")}><RankingsPage rankings={data.rankings} airports={data.airports} dataStatus={status} /></div>
-          <div className={show("routes")}><RoutesPage data={data} dataStatus={status} /></div>
-          <div className={show("graph")}><GraphPage data={data} dataStatus={status} /></div>
-          <div className={show("airports")}><AirportsPage airports={data.airports} dataStatus={status} /></div>
-          <div className={show("parte2")}><Parte2Page parte2={data.parte2 ?? null} /></div>
+          <div className={show("overview")}>
+            <OverviewPage data={data} dataStatus={status} />
+          </div>
+          <div className={show("rankings")}>
+            <RankingsPage rankings={data.rankings} airports={data.airports} dataStatus={status} />
+          </div>
+          <div className={show("routes")}>
+            <RoutesPage data={data} dataStatus={status} />
+          </div>
+          <div className={show("graph")}>
+            <GraphPage data={data} dataStatus={status} />
+          </div>
+          <div className={show("airports")}>
+            <AirportsPage airports={data.airports} dataStatus={status} />
+          </div>
+          <div className={show("parte2")}>
+            <Parte2Page parte2={data.parte2 ?? null} />
+          </div>
         </>
       )}
     </Layout>
