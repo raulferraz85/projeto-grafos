@@ -33,10 +33,19 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
   const isHome = page === "home";
   const inPart1 = PART1_IDS.has(page);
   const inPart2 = PART2_IDS.has(page);
+  const shellClassName = isHome
+    ? "flex min-h-screen flex-col bg-slate-950 text-slate-100"
+    : "flex min-h-screen flex-col";
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-neutral-200 bg-white">
+    <div className={shellClassName}>
+      <header
+        className={
+          isHome
+            ? "border-b border-slate-800/80 bg-slate-950/90 backdrop-blur supports-[backdrop-filter]:bg-slate-950/75"
+            : "border-b border-neutral-200 bg-white"
+        }
+      >
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <div className="flex items-center gap-3">
             {!isHome && (
@@ -48,14 +57,14 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
               </button>
             )}
             <div>
-              <h1 className="text-lg font-semibold">
+              <h1 className={isHome ? "text-lg font-semibold text-slate-50" : "text-lg font-semibold"}>
                 {isHome
                   ? "Projeto Grafos"
                   : inPart1
                   ? "Rede de Aeroportos"
                   : "Rede Musical Spotify"}
               </h1>
-              <p className="text-xs text-neutral-500">
+              <p className={isHome ? "text-xs text-slate-400" : "text-xs text-neutral-500"}>
                 {isHome ? (
                   "CESAR · Teoria dos Grafos · BFS · DFS · Dijkstra · Bellman-Ford"
                 ) : (
@@ -111,10 +120,12 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
 
-      <footer className="border-t border-neutral-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-4 text-xs text-neutral-500">
+      <footer className={isHome ? "border-t border-slate-800/80 bg-slate-950" : "border-t border-neutral-200 bg-white"}>
+        <div className={isHome ? "mx-auto max-w-5xl px-4 py-4 text-xs text-slate-400" : "mx-auto max-w-5xl px-4 py-4 text-xs text-neutral-500"}>
           Projeto Grafos · CESAR · BFS · DFS · Dijkstra · Bellman-Ford ·{" "}
-          <span className="text-neutral-400">Parte 1: Rede de Aeroportos · Parte 2: Spotify</span>
+          <span className={isHome ? "text-slate-500" : "text-neutral-400"}>
+            Parte 1: Rede de Aeroportos · Parte 2: Spotify
+          </span>
         </div>
       </footer>
     </div>
