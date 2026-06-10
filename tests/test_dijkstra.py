@@ -27,3 +27,13 @@ def test_dijkstra_negative_weight():
 
     with pytest.raises(ValueError, match="Dijkstra"):
         dijkstra(g, "A")
+
+def test_dijkstra_unreachable():
+    g = Graph(directed=True)
+    for c in "ABC":
+        g.add_node(Node(c, c, "R"))
+    g.add_edge("A", "B", "type", "just", 1.0)
+    # C não tem arestas de A ou B
+
+    distances, _ = dijkstra(g, "A")
+    assert distances["C"] == float("inf")

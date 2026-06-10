@@ -1,29 +1,100 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 from .graphs.graph import Graph
 from .graphs.io import load_airports, load_adjacencies, load_routes
 from .graphs.algorithms import bfs, dfs, dijkstra, bellman_ford, get_path
 from .solve import (
-    calculate_global_metrics, 
-    calculate_regional_metrics, 
-    calculate_ego_metrics, 
-    find_rankings, 
+    calculate_global_metrics,
+    calculate_regional_metrics,
+    calculate_ego_metrics,
+    find_rankings,
     process_routes
 )
 
+def _is_parte2_dataset(dataset_path: str) -> bool:
+    """Detecta se o --dataset aponta para o diretório da Parte 2."""
+    return "dataset_parte2" in dataset_path.replace("\\", "/")
+
+
+def _run_parte2(dataset_dir: str, out_dir: str, alg: str | None, source: str | None, target: str | None):
+    """Executa o pipeline da Parte 2 (benchmark + visualizações)."""
+    from .parte2.benchmark import run_benchmark
+    from .parte2.viz import generate_parte2_visualizations
+    from .parte2.loader import load_spotify_graph
+
+    print("==> Parte 2: Benchmark nos dados do Spotify...")
+    report = run_benchmark(dataset_dir, out_dir)
+
+    print("==> Parte 2: Gerando visualizações...")
+    graph = load_spotify_graph(dataset_dir)
+    generate_parte2_visualizations(graph, report, out_dir)
+
+    # Permite rodar um algoritmo específico se solicitado
+    if alg:
+        if not source:
+            print(f"Erro: --alg {alg} requer --source")
+            return
+        all_nodes = list(graph.nodes.keys())
+        if source not in graph.nodes:
+            print(f"Nó '{source}' não encontrado. Use um track_id do nodes.csv")
+            return
+        if alg == "BFS":
+            levels = bfs(graph, source)
+            print(f"BFS de {source}: {len(levels)} nós visitados, max_layer={max(levels.values())}")
+        elif alg == "DFS":
+            result = dfs(graph, source)
+            back = sum(1 for v in result["edges"].values() if v == "Back Edge")
+            print(f"DFS de {source}: {len(result['discovery'])} visitados, {back} back edges")
+        elif alg == "DIJKSTRA":
+            if not target:
+                print("Erro: DIJKSTRA requer --target")
+                return
+            distances, predecessors = dijkstra(graph, source, target)
+            cost = distances.get(target, float("inf"))
+            path = get_path(predecessors, target) if cost != float("inf") else []
+            print(f"Dijkstra {source}→{target}: custo={cost:.4f}, caminho={' → '.join(path)}")
+        elif alg == "BELLMAN-FORD":
+            from .parte2.loader import load_mood_graph
+            mood_graph = load_mood_graph(dataset_dir)
+            if source not in mood_graph.nodes:
+                print(f"Nó '{source}' não encontrado no mood graph.")
+                return
+            distances, predecessors, cycle = bellman_ford(mood_graph, source)
+            if cycle:
+                print("Aviso: ciclo negativo detectado!")
+            if target and target in mood_graph.nodes:
+                cost = distances.get(target, float("inf"))
+                path = get_path(predecessors, target) if cost != float("inf") else []
+                print(f"Bellman-Ford {source}→{target}: custo={cost:.4f}, caminho={' → '.join(path)}")
+            else:
+                reachable = sum(1 for v in distances.values() if v != float("inf"))
+                print(f"Bellman-Ford de {source}: {reachable} nós alcançáveis")
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Brazilian Airport Network Analysis")
-    parser.add_argument("--dataset", type=str, required=True, help="Path to airport data CSV")
-    parser.add_argument("--adjacencias", type=str, default="data/adjacencias_aeroportos.csv", help="Path to adjacencies CSV")
-    parser.add_argument("--rotas", type=str, default="data/rotas.csv", help="Path to routes CSV")
-    parser.add_argument("--alg", type=str, choices=["BFS", "DFS", "DIJKSTRA", "BELLMAN-FORD"], help="Algorithm to run")
-    parser.add_argument("--source", type=str, help="Source IATA code")
-    parser.add_argument("--target", type=str, help="Target IATA code")
-    parser.add_argument("--out", type=str, default="out/", help="Output directory")
+    parser = argparse.ArgumentParser(description="Graph Network Analysis — Parte 1 (Aeroportos) e Parte 2 (Spotify)")
+    parser.add_argument("--dataset", type=str, required=True, help="Caminho para o CSV de aeroportos (Parte 1) ou diretório dataset_parte2/ (Parte 2)")
+    parser.add_argument("--adjacencias", type=str, default="data/adjacencias_aeroportos.csv", help="CSV de adjacências (Parte 1)")
+    parser.add_argument("--rotas", type=str, default="data/rotas.csv", help="CSV de rotas (Parte 1)")
+    parser.add_argument("--alg", type=str, choices=["BFS", "DFS", "DIJKSTRA", "BELLMAN-FORD"], help="Algoritmo a executar")
+    parser.add_argument("--source", type=str, help="Nó de origem")
+    parser.add_argument("--target", type=str, help="Nó de destino")
+    parser.add_argument("--out", type=str, default="out/", help="Diretório de saída")
 
     args = parser.parse_args()
 
+    # ── Parte 2 ────────────────────────────────────────────────────────
+    if _is_parte2_dataset(args.dataset):
+        try:
+            _run_parte2(args.dataset, args.out, args.alg, args.source, args.target)
+        except FileNotFoundError as exc:
+            print(f"Erro: {exc}")
+            sys.exit(1)
+        return
+
+    # ── Parte 1 ────────────────────────────────────────────────────────
     # Initialize Graph
     graph = Graph(directed=False)
     

@@ -98,3 +98,8 @@ Desktop.ini
 
 # --- Misc ---
 *.bak
+RELATORIO_RASCUNHO.md
+
+# Parte 2 — dataset bruto do Spotify (grande demais para commitar)
+data/dataset_parte2/spotify_tracks.csv
+data/dataset_parte2/spotfy-dataset.csv

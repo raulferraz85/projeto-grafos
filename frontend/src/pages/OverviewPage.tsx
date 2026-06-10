@@ -52,7 +52,7 @@ export function OverviewPage({ data, dataStatus }: Props) {
         <StatCard label="Ordem"     value={fmt(global.order)} />
         <StatCard label="Tamanho"   value={fmt(global.size)} />
         <StatCard label="Densidade" value={fmt(global.density, true)} />
-        <StatCard label="Rotas"     value={fmt(stats.routeCount)} />
+        <StatCard label="Pares testados" value={fmt(stats.routeCount)} />
       </div>
 
       {/* Insight chips */}
@@ -96,7 +96,7 @@ export function OverviewPage({ data, dataStatus }: Props) {
                 <th>Aeroportos</th>
                 <th>Arestas</th>
                 <th>Densidade</th>
-                <th className="w-32">Relativo</th>
+                <th className="w-32">Densidade relativa</th>
               </tr>
             </thead>
             <tbody>

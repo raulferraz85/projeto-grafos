@@ -3,14 +3,8 @@ from src.graphs.algorithms import bfs
 
 def test_bfs_levels():
     g = Graph()
-    nodes = [
-        Node("A", "City A", "Region 1"),
-        Node("B", "City B", "Region 1"),
-        Node("C", "City C", "Region 1"),
-        Node("D", "City D", "Region 1")
-    ]
-    for n in nodes:
-        g.add_node(n)
+    for c in "ABCD":
+        g.add_node(Node(c, c, "R"))
 
     g.add_edge("A", "B", "type", "just", 1.0)
     g.add_edge("B", "C", "type", "just", 1.0)
@@ -21,3 +15,17 @@ def test_bfs_levels():
     assert levels["B"] == 1
     assert levels["D"] == 1
     assert levels["C"] == 2
+
+def test_bfs_disconnected():
+    g = Graph()
+    for c in "ABCD":
+        g.add_node(Node(c, c, "R"))
+
+    g.add_edge("A", "B", "type", "just", 1.0)
+    # C e D são isolados
+
+    levels = bfs(g, "A")
+    assert "A" in levels
+    assert "B" in levels
+    assert "C" not in levels
+    assert "D" not in levels

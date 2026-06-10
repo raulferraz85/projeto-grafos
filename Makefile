@@ -1,4 +1,4 @@
-.PHONY: dev pipeline test clean install
+.PHONY: dev pipeline parte2 test clean install
 
 PYTHON := .venv/bin/python
 VENV   := .venv/bin/activate
@@ -15,15 +15,33 @@ dev: install pipeline
 	@cd frontend && npx vite --port 5173
 
 # ──────────────────────────────────────────────────────────────────
-# pipeline  →  gera out/ e data.json (sem subir o servidor)
+# pipeline  →  gera out/ Parte 1 + Parte 2 (se disponível) + data.json
 # ──────────────────────────────────────────────────────────────────
 pipeline: $(VENV)
-	@echo "==> Métricas, rotas e visualizações → out/"
+	@echo "==> [Parte 1] Métricas, rotas e visualizações → out/"
 	@$(PYTHON) -m src.cli \
 		--dataset data/aeroportos_data.csv \
 		--adjacencias data/adjacencias_aeroportos.csv \
 		--rotas data/rotas.csv \
 		--out out/
+	@if [ -f data/dataset_parte2/nodes.csv ]; then \
+		echo "==> [Parte 2] Benchmark e visualizações → out/"; \
+		$(PYTHON) -m src.cli --dataset data/dataset_parte2/ --out out/; \
+	else \
+		echo "==> [Parte 2] Pulando — nodes.csv não encontrado."; \
+		echo "    Consulte data/dataset_parte2/README.md"; \
+	fi
+	@echo "==> JSON consolidado → frontend/public/data.json"
+	@$(PYTHON) scripts/build_data.py
+
+# ──────────────────────────────────────────────────────────────────
+# parte2  →  apenas Parte 2 (pré-processa e roda benchmark)
+# ──────────────────────────────────────────────────────────────────
+parte2: $(VENV)
+	@echo "==> [Parte 2] Pré-processando dataset Spotify..."
+	@$(PYTHON) scripts/generate_parte2.py
+	@echo "==> [Parte 2] Benchmark e visualizações → out/"
+	@$(PYTHON) -m src.cli --dataset data/dataset_parte2/ --out out/
 	@echo "==> JSON consolidado → frontend/public/data.json"
 	@$(PYTHON) scripts/build_data.py
 

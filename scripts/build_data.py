@@ -175,6 +175,10 @@ def build_rankings(airports_full: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def load_parte2() -> dict[str, Any] | None:
+    return read_json(OUT_DIR / "parte2_report.json")
+
+
 def build_payload() -> dict[str, Any]:
     airports = load_airports()
     edges = load_edges()
@@ -220,6 +224,8 @@ def build_payload() -> dict[str, Any]:
     for e in edges:
         connection_type_counts[e["connectionType"]] = connection_type_counts.get(e["connectionType"], 0) + 1
 
+    parte2 = load_parte2()
+
     return {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "global": global_metrics,
@@ -237,6 +243,7 @@ def build_payload() -> dict[str, Any]:
             "edgeCount": len(edges),
             "routeCount": len(routes),
         },
+        "parte2": parte2,
     }
 
 
@@ -251,6 +258,14 @@ def main() -> None:
         f" {payload['stats']['edgeCount']} arestas,"
         f" {payload['stats']['routeCount']} rotas"
     )
+    if payload.get("parte2"):
+        ds = payload["parte2"].get("dataset", {})
+        print(
+            f"  - Parte 2: {ds.get('nodes', 0):,} músicas,"
+            f" {ds.get('edges', 0):,} conexões"
+        )
+    else:
+        print("  - Parte 2: não disponível (execute python scripts/generate_parte2.py && make parte2)")
 
     # Copia o grafo interativo para o frontend poder servi-lo como iframe
     src = OUT_DIR / "grafo_interativo.html"
