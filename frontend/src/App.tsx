@@ -13,14 +13,15 @@ import { Parte2Page } from "./pages/Parte2Page";
 export default function App() {
   const { data, loading, error, status } = useData();
   const [page, setPage] = useState<Page>("home");
+  const [homeTheme, setHomeTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
-    document.body.classList.toggle("theme-home", page === "home");
+    document.body.classList.toggle("theme-home", page === "home" && homeTheme === "dark");
 
     return () => {
       document.body.classList.remove("theme-home");
     };
-  }, [page]);
+  }, [page, homeTheme]);
 
   if (loading) {
     return (
@@ -33,9 +34,21 @@ export default function App() {
   const show = (p: Page) => (page === p ? "" : "hidden");
 
   return (
-    <Layout data={data} page={page} onPageChange={setPage} dataStatus={status}>
+    <Layout
+      data={data}
+      page={page}
+      onPageChange={setPage}
+      dataStatus={status}
+      homeTheme={homeTheme}
+    >
       {page === "home" ? (
-        <HomePage data={data} dataStatus={status} onNavigate={setPage} />
+        <HomePage
+          data={data}
+          dataStatus={status}
+          onNavigate={setPage}
+          homeTheme={homeTheme}
+          onThemeToggle={() => setHomeTheme((current) => (current === "dark" ? "light" : "dark"))}
+        />
       ) : (
         <>
           <DataBanner status={status} error={error} />

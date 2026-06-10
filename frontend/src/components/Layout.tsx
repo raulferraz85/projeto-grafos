@@ -25,15 +25,17 @@ interface Props {
   page: Page;
   onPageChange: (page: Page) => void;
   dataStatus: DataStatus;
+  homeTheme: "dark" | "light";
   children: ReactNode;
 }
 
-export function Layout({ data, page, onPageChange, dataStatus, children }: Props) {
+export function Layout({ data, page, onPageChange, dataStatus, homeTheme, children }: Props) {
   const updatedLabel = dataStatus === "live" ? formatDateTime(data.generatedAt) : EM_DASH;
   const isHome = page === "home";
+  const isDarkHome = isHome && homeTheme === "dark";
   const inPart1 = PART1_IDS.has(page);
   const inPart2 = PART2_IDS.has(page);
-  const shellClassName = isHome
+  const shellClassName = isDarkHome
     ? "flex min-h-screen flex-col bg-slate-950 text-slate-100"
     : "flex min-h-screen flex-col";
 
@@ -41,7 +43,7 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
     <div className={shellClassName}>
       <header
         className={
-          isHome
+          isDarkHome
             ? "border-b border-slate-800/80 bg-slate-950/90 backdrop-blur supports-[backdrop-filter]:bg-slate-950/75"
             : "border-b border-neutral-200 bg-white"
         }
@@ -57,14 +59,14 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
               </button>
             )}
             <div>
-              <h1 className={isHome ? "text-lg font-semibold text-slate-50" : "text-lg font-semibold"}>
+              <h1 className={isDarkHome ? "text-lg font-semibold text-slate-50" : "text-lg font-semibold"}>
                 {isHome
                   ? "Projeto Grafos"
                   : inPart1
                   ? "Rede de Aeroportos"
                   : "Rede Musical Spotify"}
               </h1>
-              <p className={isHome ? "text-xs text-slate-400" : "text-xs text-neutral-500"}>
+              <p className={isDarkHome ? "text-xs text-slate-400" : "text-xs text-neutral-500"}>
                 {isHome ? (
                   "CESAR · Teoria dos Grafos · BFS · DFS · Dijkstra · Bellman-Ford"
                 ) : (
@@ -120,10 +122,10 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
 
-      <footer className={isHome ? "border-t border-slate-800/80 bg-slate-950" : "border-t border-neutral-200 bg-white"}>
-        <div className={isHome ? "mx-auto max-w-5xl px-4 py-4 text-xs text-slate-400" : "mx-auto max-w-5xl px-4 py-4 text-xs text-neutral-500"}>
+      <footer className={isDarkHome ? "border-t border-slate-800/80 bg-slate-950" : "border-t border-neutral-200 bg-white"}>
+        <div className={isDarkHome ? "mx-auto max-w-5xl px-4 py-4 text-xs text-slate-400" : "mx-auto max-w-5xl px-4 py-4 text-xs text-neutral-500"}>
           Projeto Grafos · CESAR · BFS · DFS · Dijkstra · Bellman-Ford ·{" "}
-          <span className={isHome ? "text-slate-500" : "text-neutral-400"}>
+          <span className={isDarkHome ? "text-slate-500" : "text-neutral-400"}>
             Parte 1: Rede de Aeroportos · Parte 2: Spotify
           </span>
         </div>
