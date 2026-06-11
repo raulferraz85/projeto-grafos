@@ -13,11 +13,6 @@
     @apply bg-neutral-50 font-sans text-neutral-900 antialiased;
   }
 
-  body.theme-home {
-    @apply bg-slate-950 text-slate-100;
-    color-scheme: dark;
-  }
-
   body,
   #root {
     transition:
@@ -69,13 +64,5 @@
 
   .nav-link-active {
     @apply bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white;
-  }
-
-  body.theme-home .nav-link {
-    @apply text-slate-400 hover:bg-slate-900 hover:text-slate-100;
-  }
-
-  body.theme-home .nav-link-active {
-    @apply bg-slate-100 text-slate-950 hover:bg-white hover:text-slate-950;
   }
 }

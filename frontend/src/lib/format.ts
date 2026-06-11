@@ -35,16 +35,4 @@ export const formatDateTime = (iso: string) => {
   }
 };
 
-export const REGION_COLORS: Record<string, { from: string; to: string; solid: string }> = {
-  Nordeste: { from: "#fb923c", to: "#f59e0b", solid: "#f97316" },
-  Sudeste: { from: "#38bdf8", to: "#3b82f6", solid: "#3b82f6" },
-  "Centro-Oeste": { from: "#facc15", to: "#eab308", solid: "#eab308" },
-  Sul: { from: "#34d399", to: "#10b981", solid: "#10b981" },
-  Norte: { from: "#a78bfa", to: "#8b5cf6", solid: "#8b5cf6" },
-};
-
-export const colorForRegion = (region: string) =>
-  REGION_COLORS[region]?.solid ?? "#64748b";
-
-export const colorPairForRegion = (region: string) =>
-  REGION_COLORS[region] ?? { from: "#64748b", to: "#475569", solid: "#64748b" };
+// As cores por região/categoria foram unificadas em lib/theme.ts (fonte única).

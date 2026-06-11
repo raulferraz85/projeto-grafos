@@ -1,31 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AppData, Airport } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
-import { PageHeader } from "../components/PageHeader";
+import { formatNumber } from "../lib/format";
+import { REGION_COLORS, EDGE_COLORS } from "../lib/theme";
 import { AirportSearch } from "../components/AirportSearch";
 import { runDijkstra, formatDuration } from "../lib/dijkstra";
+import { ChartCard } from "../components/charts/ChartCard";
+import { Histogram } from "../components/charts/Histogram";
+import { DonutChart, type DonutDatum } from "../components/charts/DonutChart";
 
 interface Props {
   data: AppData;
   dataStatus: DataStatus;
 }
 
-const REGION_COLORS: Record<string, string> = {
-  Norte:          "#22c55e",
-  Nordeste:       "#f97316",
-  Sudeste:        "#38bdf8",
-  Sul:            "#a78bfa",
-  "Centro-Oeste": "#facc15",
+const TYPE_LABEL: Record<string, string> = {
+  hub_nacional: "Hub nacional",
+  hub_regional: "Hub regional",
+  regional:     "Voo regional",
 };
-const EDGE_COLORS: Record<string, string> = {
-  hub_nacional: "#ef4444",
-  hub_regional: "#fb923c",
-  regional:     "#cbd5e1",
-};
-
-function originalNodeColor(region: string) {
-  return REGION_COLORS[region] ?? "#94a3b8";
-}
 
 const VIS_SCRIPT =
   "https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js";
@@ -126,6 +119,21 @@ export function GraphPage({ data, dataStatus }: Props) {
     }
     return result;
   }, [data.routes]);
+
+  // ── Dados dos gráficos-resumo da rede ─────────────────────────────────────
+  const degreeValues = useMemo(() => airports.map((a) => a.degree), [airports]);
+  const connectionDonut: DonutDatum[] = useMemo(
+    () =>
+      data.stats.connectionTypes.map((t) => ({
+        label: TYPE_LABEL[t.type] ?? t.type,
+        value: t.count,
+        color: EDGE_COLORS[t.type] ?? "#94a3b8",
+      })),
+    [data.stats.connectionTypes],
+  );
+  const avgDegree = airports.length > 0
+    ? airports.reduce((s, a) => s + a.degree, 0) / airports.length
+    : 0;
 
   // 1. Carrega vis-network (standalone UMD expõe window.vis.DataSet e .Network)
   useEffect(() => {
@@ -263,7 +271,7 @@ export function GraphPage({ data, dataStatus }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-2" style={{ height: "calc(100vh - 145px)" }}>
+    <div className="flex flex-col gap-3">
 
       {/* ── Compact header: title + legend in one row ─────────── */}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
@@ -290,11 +298,12 @@ export function GraphPage({ data, dataStatus }: Props) {
       </div>
 
       {!live ? (
-        <div className="card flex flex-1 items-center justify-center text-sm text-neutral-500">
+        <div className="card flex h-[560px] items-center justify-center text-sm text-neutral-500">
           Execute <code className="mx-1 rounded bg-neutral-100 px-1 text-xs">make pipeline</code> para carregar o grafo.
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 gap-4">
+        <>
+        <div className="flex gap-4" style={{ height: 560 }}>
 
           {/* ── Network ────────────────────────────────────────── */}
           <div
@@ -455,6 +464,41 @@ export function GraphPage({ data, dataStatus }: Props) {
             </div>
           </div>
         </div>
+
+        {/* ── Resumo analítico da rede ─────────────────────────── */}
+        <section className="space-y-4 pt-2">
+          <div>
+            <h3 className="text-base font-bold text-neutral-800">Resumo analítico da rede</h3>
+            <p className="mt-0.5 text-sm text-neutral-600">
+              Visão estatística do grafo exibido acima: como os {airports.length} aeroportos se
+              distribuem por número de conexões e qual a composição das {data.edges.length}{" "}
+              arestas por tipo. Grau médio da rede:{" "}
+              <strong className="text-neutral-700">{formatNumber(avgDegree, 1)}</strong>.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ChartCard
+              title="Distribuição de grau"
+              description="Quantos aeroportos têm cada número de conexões diretas. A cauda à direita são os grandes hubs (BEL, CWB, GRU…); a maioria dos aeroportos tem grau baixo. Linha tracejada = grau médio."
+            >
+              <Histogram values={degreeValues} bins={12} xLabel="Grau (conexões)" />
+            </ChartCard>
+
+            <ChartCard
+              title="Composição das conexões"
+              description="Proporção das arestas por tipo. Hubs nacionais ligam grandes centros; hubs regionais conectam capitais a cidades médias; voos regionais cobrem trechos locais."
+            >
+              <DonutChart
+                data={connectionDonut}
+                valueFormatter={(v) => `${formatNumber(v)}`}
+                centerLabel="conexões"
+                centerValue={formatNumber(data.edges.length)}
+              />
+            </ChartCard>
+          </div>
+        </section>
+        </>
       )}
     </div>
   );

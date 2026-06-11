@@ -12,7 +12,11 @@ import type {
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
 import { EM_DASH, formatNumber } from "../lib/format";
+import { genreColor } from "../lib/theme";
 import { runBFS, runDFS, runDijkstra, runBellmanFord, type AdjList } from "../lib/music-algorithms";
+import { ChartCard, LegendDot } from "../components/charts/ChartCard";
+import { Histogram } from "../components/charts/Histogram";
+import { BarChart, type BarDatum } from "../components/charts/BarChart";
 
 // ── vis-network loader ─────────────────────────────────────────────────────
 const VIS_SCRIPT = "https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js";
@@ -40,21 +44,29 @@ function loadVisCss() {
   document.head.appendChild(l);
 }
 
-// ── Genre colours ─────────────────────────────────────────────────────────
-const GENRE_PALETTE = [
-  "#38bdf8","#22c55e","#f97316","#a78bfa","#facc15",
-  "#fb7185","#34d399","#60a5fa","#f472b6","#fbbf24",
-  "#4ade80","#c084fc","#fb923c","#818cf8","#2dd4bf",
-  "#e879f9","#86efac","#93c5fd","#fca5a5","#6ee7b7",
-];
-function genreColor(genre: string): string {
-  let h = 0;
-  for (let i = 0; i < genre.length; i++) h = genre.charCodeAt(i) + ((h << 5) - h);
-  return GENRE_PALETTE[Math.abs(h) % GENRE_PALETTE.length];
+// Cores por gênero importadas de lib/theme (genreColor).
+
+// ── Helpers de amostra ──────────────────────────────────────────────────────
+/** Grau (in + out) de cada nó considerando apenas as arestas visíveis na amostra. */
+function inSampleDegrees(sample: MusicGraphSample): Record<string, number> {
+  const deg: Record<string, number> = {};
+  for (const n of sample.nodes) deg[n.id] = 0;
+  for (const e of sample.edges) {
+    if (deg[e.source] !== undefined) deg[e.source]++;
+    if (deg[e.target] !== undefined) deg[e.target]++;
+  }
+  return deg;
+}
+
+/** Contagem de nós por gênero, ordenada do mais frequente ao menos. */
+function genreCounts(sample: MusicGraphSample): [string, number][] {
+  const m: Record<string, number> = {};
+  for (const n of sample.nodes) m[n.genre] = (m[n.genre] ?? 0) + 1;
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────
-type TabId = "dataset" | "grafo" | "algoritmos" | "performance";
+export type Parte2Tab = "dataset" | "grafo" | "algoritmos" | "performance";
 type AlgKey = "BFS" | "DFS" | "Dijkstra" | "Bellman-Ford";
 interface DemoResult {
   alg: AlgKey; source: string; target?: string;
@@ -64,11 +76,9 @@ interface DemoResult {
 interface HighlightState { ids: string[]; color: string }
 
 // ── Entry point ───────────────────────────────────────────────────────────
-interface Props { parte2: Parte2Data | null }
+interface Props { parte2: Parte2Data | null; activeTab: Parte2Tab }
 
-export function Parte2Page({ parte2 }: Props) {
-  const [tab, setTab] = useState<TabId>("dataset");
-
+export function Parte2Page({ parte2, activeTab }: Props) {
   if (!parte2) {
     return (
       <div className="space-y-6">
@@ -90,13 +100,10 @@ export function Parte2Page({ parte2 }: Props) {
       {/* Feature 2: Hero banner */}
       <HeroBanner dataset={parte2.dataset} />
 
-      {/* Feature 1: Tab navigation */}
-      <TabBar active={tab} onChange={setTab} />
-
-      {tab === "dataset"     && <DatasetTab     parte2={parte2} />}
-      {tab === "grafo"       && <GrafoTab        parte2={parte2} />}
-      {tab === "algoritmos"  && <AlgoritmosTab   parte2={parte2} />}
-      {tab === "performance" && <PerformanceTab  parte2={parte2} />}
+      {activeTab === "dataset"     && <DatasetTab     parte2={parte2} />}
+      {activeTab === "grafo"       && <GrafoTab        parte2={parte2} />}
+      {activeTab === "algoritmos"  && <AlgoritmosTab   parte2={parte2} />}
+      {activeTab === "performance" && <PerformanceTab  parte2={parte2} />}
     </div>
   );
 }
@@ -161,37 +168,6 @@ function AnimatedNumber({ target, duration = 1200, decimals = 0 }: {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Feature 1: Tab bar
-// ══════════════════════════════════════════════════════════════════════════
-
-const TABS: { id: TabId; label: string; emoji: string }[] = [
-  { id: "dataset",     label: "Dataset",     emoji: "📊" },
-  { id: "grafo",       label: "Grafo",       emoji: "🌐" },
-  { id: "algoritmos",  label: "Algoritmos",  emoji: "🧮" },
-  { id: "performance", label: "Performance", emoji: "⚡" },
-];
-
-function TabBar({ active, onChange }: { active: TabId; onChange: (t: TabId) => void }) {
-  return (
-    <div className="flex gap-1 bg-neutral-100 rounded-xl p-1 mb-8">
-      {TABS.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition-all ${
-            active === t.id
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-500 hover:text-neutral-700"
-          }`}
-        >
-          <span className="hidden sm:inline">{t.emoji} </span>{t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════
 // Dataset Tab — Features 3, 4, 5, 6
 // ══════════════════════════════════════════════════════════════════════════
 
@@ -229,14 +205,28 @@ function DatasetTab({ parte2 }: { parte2: Parte2Data }) {
         </div>
       </section>
 
-      {/* Feature 4: Degree histogram */}
+      {/* Feature 4: Degree histogram (corrigido — grau dentro da amostra) */}
       {sample && sample.nodes.length > 0 && (
         <section className="space-y-4">
-          <SectionTitle>Distribuição de Graus (top-200 nós)</SectionTitle>
+          <SectionTitle>Distribuição de grau na amostra</SectionTitle>
           <p className="text-sm text-neutral-600">
-            Histograma dos graus de saída dos 200 nós mais conectados. Barra laranja = pico. Linha verde = média.
+            No grafo completo, <strong>todo nó tem grau de saída fixo = {dataset.degree_max}</strong>{" "}
+            (construção k-NN: cada música aponta para seus {dataset.degree_max} vizinhos mais próximos
+            no espaço de áudio), então a distribuição global seria uma única barra e não revelaria nada.
+            Por isso mostramos o <strong>grau dentro da amostra</strong> de {sample.nodes.length} nós:
+            quantas das {sample.edges.length} conexões renderizadas tocam cada música. A cauda à direita
+            são os nós-ponte que conectam diferentes regiões da rede.
           </p>
-          <DegreeHistogram nodes={sample.nodes} mean={dataset.degree_mean} />
+          <ChartCard
+            title="Grau na amostra renderizada"
+            description="Distribuição de grau (entrada + saída) contando apenas as arestas visíveis na amostra. Barra laranja = faixa mais frequente; linha tracejada = grau médio na amostra."
+          >
+            <Histogram
+              values={Object.values(inSampleDegrees(sample))}
+              bins={12}
+              xLabel="Grau na amostra"
+            />
+          </ChartCard>
         </section>
       )}
 
@@ -315,94 +305,6 @@ function IconStatCard({ label, value, decimals, icon, color }: {
         <p className={`mt-0.5 font-mono text-xl font-bold tabular-nums ${c.val}`}>
           <AnimatedNumber target={value} decimals={decimals ?? 0} />
         </p>
-      </div>
-    </div>
-  );
-}
-
-// Feature 4: SVG histogram
-function DegreeHistogram({ nodes, mean }: { nodes: MusicGraphNode[]; mean: number }) {
-  const degrees = nodes.map((n) => n.degree);
-  const maxDeg = Math.max(...degrees, 1);
-  const N = 12;
-  const bSize = Math.ceil(maxDeg / N);
-  const buckets: number[] = Array(N).fill(0);
-  for (const d of degrees) buckets[Math.min(Math.floor(d / bSize), N - 1)]++;
-  const maxC = Math.max(...buckets, 1);
-  const meanFrac = Math.min(mean / (N * bSize), 1);
-
-  const W = 600; const H = 180;
-  const PL = 36; const PR = 16; const PT = 16; const PB = 36;
-  const iW = W - PL - PR; const iH = H - PT - PB;
-  const bW = iW / N;
-
-  return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 overflow-x-auto">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 300 }}>
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((f) => {
-          const y = PT + iH * (1 - f);
-          return (
-            <g key={f}>
-              <line x1={PL} y1={y} x2={PL + iW} y2={y} stroke="#f1f5f9" strokeWidth={1} />
-              <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#94a3b8">
-                {Math.round(f * maxC)}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Bars */}
-        {buckets.map((count, i) => {
-          const x = PL + i * bW;
-          const bH = (count / maxC) * iH;
-          const y = PT + iH - bH;
-          const isPeak = count === maxC;
-          return (
-            <g key={i}>
-              <rect x={x + 2} y={y} width={bW - 4} height={bH}
-                fill={isPeak ? "#fb923c" : "#38bdf8"} rx={2} opacity={0.9} />
-              {bH > 16 && (
-                <text x={x + bW / 2} y={y + 11} textAnchor="middle" fontSize={9} fill="white" fontWeight="700">
-                  {count}
-                </text>
-              )}
-              <text x={x + bW / 2} y={H - PB + 14} textAnchor="middle" fontSize={8} fill="#94a3b8">
-                {i * bSize}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Mean line */}
-        {(() => {
-          const mx = PL + meanFrac * iW;
-          return (
-            <>
-              <line x1={mx} y1={PT} x2={mx} y2={PT + iH} stroke="#22c55e" strokeWidth={2} strokeDasharray="5,3" />
-              <rect x={mx + 3} y={PT + 2} width={52} height={13} rx={2} fill="#f0fdf4" />
-              <text x={mx + 5} y={PT + 11} fontSize={9} fill="#16a34a" fontWeight="700">
-                média={mean.toFixed(1)}
-              </text>
-            </>
-          );
-        })()}
-
-        {/* Axis labels */}
-        <text x={PL + iW / 2} y={H - 2} textAnchor="middle" fontSize={9} fill="#64748b">Grau de saída</text>
-        <text x={10} y={PT + iH / 2} textAnchor="middle" fontSize={9} fill="#64748b"
-          transform={`rotate(-90,10,${PT + iH / 2})`}>Nós</text>
-      </svg>
-      <div className="flex items-center gap-5 mt-1 text-xs text-neutral-500">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded bg-sky-400" />Frequência
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded bg-orange-400" />Pico
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-5 border-t-2 border-dashed border-green-500" />Média
-        </span>
       </div>
     </div>
   );
@@ -488,7 +390,6 @@ function ConnectionsTable({ sample }: { sample: MusicGraphSample }) {
 
 function GrafoTab({ parte2 }: { parte2: Parte2Data }) {
   const sample = parte2.graph_sample;
-  const [darkMode, setDarkMode] = useState(true);
   const [filterGenre, setFilterGenre] = useState<string | null>(null);
   const [highlight, setHighlight] = useState<HighlightState | null>(null);
 
@@ -509,13 +410,14 @@ function GrafoTab({ parte2 }: { parte2: Parte2Data }) {
       <MusicGraphSection
         sample={sample}
         dijkstraResults={parte2.dijkstra_results}
-        darkMode={darkMode}
         filterGenre={filterGenre}
         highlight={highlight}
-        onToggleDark={() => setDarkMode((d) => !d)}
         onFilterGenre={toggleGenre}
         onSetHighlight={applyHighlight}
       />
+
+      {/* Análise da amostra — reage ao filtro de gênero do grafo */}
+      <MusicAnalysisSection sample={sample} filterGenre={filterGenre} />
 
       {/* Feature 14: interactive demo with vis-network highlight */}
       <AlgorithmDemoSection
@@ -527,21 +429,78 @@ function GrafoTab({ parte2 }: { parte2: Parte2Data }) {
   );
 }
 
+// Análise descritiva da amostra renderizada (sincroniza com o filtro de gênero)
+function MusicAnalysisSection({
+  sample, filterGenre,
+}: {
+  sample: MusicGraphSample;
+  filterGenre: string | null;
+}) {
+  const genreBars: BarDatum[] = useMemo(() => {
+    const counts = genreCounts(sample).slice(0, 15);
+    return counts.map(([g, c]) => ({
+      label: g,
+      value: c,
+      color: filterGenre && g !== filterGenre ? "#e2e8f0" : genreColor(g),
+      sublabel: filterGenre === g ? "gênero filtrado" : undefined,
+    }));
+  }, [sample, filterGenre]);
+
+  const degreeValues = useMemo(
+    () => Object.values(inSampleDegrees(sample)),
+    [sample],
+  );
+
+  const totalGenres = useMemo(() => genreCounts(sample).length, [sample]);
+
+  return (
+    <section className="space-y-4">
+      <SectionTitle>Análise da amostra renderizada</SectionTitle>
+      <p className="text-sm text-neutral-600">
+        Os gráficos abaixo descrevem os {sample.nodes.length} nós exibidos no grafo. Ao clicar num
+        gênero na legenda lateral para filtrar, a barra correspondente é destacada aqui em tempo real.
+      </p>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard
+          title={`Gêneros mais frequentes (de ${totalGenres})`}
+          description={
+            filterGenre
+              ? `Destacando "${filterGenre}". Cada barra é o nº de músicas do gênero na amostra.`
+              : "Nº de músicas por gênero na amostra. A rede é bem fragmentada — muitos gêneros com poucas faixas cada."
+          }
+        >
+          <BarChart
+            data={genreBars}
+            orientation="horizontal"
+            valueName="músicas"
+            height={Math.max(220, genreBars.length * 24)}
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="Distribuição de grau na amostra"
+          description="Quantas das conexões renderizadas tocam cada música (grau entrada + saída na amostra). Linha tracejada = grau médio."
+        >
+          <Histogram values={degreeValues} bins={12} xLabel="Grau na amostra" />
+        </ChartCard>
+      </div>
+    </section>
+  );
+}
+
 // Feature 7, 8, 9: Enhanced vis-network
 interface GraphSectionProps {
   sample: MusicGraphSample;
   dijkstraResults: DijkstraResult[];
-  darkMode: boolean;
   filterGenre: string | null;
   highlight: HighlightState | null;
-  onToggleDark: () => void;
   onFilterGenre: (g: string) => void;
   onSetHighlight: (h: HighlightState | null) => void;
 }
 
 function MusicGraphSection({
-  sample, dijkstraResults, darkMode, filterGenre, highlight,
-  onToggleDark, onFilterGenre, onSetHighlight,
+  sample, dijkstraResults, filterGenre, highlight,
+  onFilterGenre, onSetHighlight,
 }: GraphSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const networkRef   = useRef<any>(null);
@@ -573,10 +532,10 @@ function MusicGraphSection({
     const vis = (window as any).vis;
     if (!vis?.DataSet || !vis?.Network) return;
 
-    const bg = darkMode ? "#0f172a" : "#ffffff";
-    const edgeColor = darkMode ? "#334155" : "#cbd5e1";
-    const fontColor = darkMode ? "#e2e8f0" : "#1e293b";
-    const strokeColor = darkMode ? "#0f172a" : "#fff";
+    const bg = "#ffffff";
+    const edgeColor = "#cbd5e1";
+    const fontColor = "#1e293b";
+    const strokeColor = "#fff";
 
     const nodeData = sample.nodes.map((n) => {
       const color = genreColor(n.genre);
@@ -585,7 +544,7 @@ function MusicGraphSection({
         id: n.id,
         label: n.label.split(" — ")[0].slice(0, 18),
         title: `<b>${n.label}</b><br>Gênero: ${n.genre}<br>Grau: ${n.degree}`,
-        color: { background: color, border: darkMode ? "#1e293b" : "#e2e8f0", highlight: { background: color, border: "#f97316" } },
+        color: { background: color, border: "#e2e8f0", highlight: { background: color, border: "#f97316" } },
         size: Math.max(6, 6 + n.degree * 0.08),
         font: { color: fontColor, size: 9, strokeWidth: 2, strokeColor },
       };
@@ -620,20 +579,20 @@ function MusicGraphSection({
       if (params.nodes.length > 0) setSelected(nodeById[params.nodes[0]] ?? null);
     });
     return () => { networkRef.current?.destroy(); networkRef.current = null; };
-  }, [loaded, sample, nodeById, darkMode]);
+  }, [loaded, sample, nodeById]);
 
   // Apply visual highlight / genre filter
   useEffect(() => {
     if (!nodesRef.current || !loaded) return;
-    const fontColor = darkMode ? "#e2e8f0" : "#1e293b";
-    const strokeColor = darkMode ? "#0f172a" : "#fff";
-    const dimBg = darkMode ? "#1e293b" : "#e2e8f0";
+    const fontColor = "#1e293b";
+    const strokeColor = "#fff";
+    const dimBg = "#e2e8f0";
 
     nodesRef.current.update(
       sample.nodes.map((n) => {
         let bg = origColors.current[n.id];
         let opacity = 1;
-        let border = darkMode ? "#1e293b" : "#e2e8f0";
+        let border = "#e2e8f0";
         let borderWidth = 1;
 
         if (highlight && highlight.ids.length > 0) {
@@ -654,7 +613,7 @@ function MusicGraphSection({
         };
       }),
     );
-  }, [highlight, filterGenre, loaded, sample.nodes, darkMode]);
+  }, [highlight, filterGenre, loaded, sample.nodes]);
 
   // Feature 9: Handle Dijkstra path selection
   function selectPair(idx: number) {
@@ -670,8 +629,8 @@ function MusicGraphSection({
     onSetHighlight({ ids: Array.from(ids), color: "#22c55e" });
   }
 
-  const borderCls = darkMode ? "border-slate-700" : "border-neutral-200";
-  const bgCls     = darkMode ? "bg-slate-900"    : "bg-white";
+  const borderCls = "border-neutral-200";
+  const bgCls     = "bg-white";
 
   return (
     <section className="space-y-4">
@@ -683,18 +642,6 @@ function MusicGraphSection({
 
       {/* Controls */}
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Feature 7: Dark/light toggle */}
-        <button
-          onClick={onToggleDark}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-            darkMode
-              ? "bg-slate-800 text-slate-200 border-slate-600 hover:bg-slate-700"
-              : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50"
-          }`}
-        >
-          {darkMode ? "☀ Tema claro" : "🌙 Tema escuro"}
-        </button>
-
         {/* Feature 9: Dijkstra path dropdown */}
         <select
           value={pairIdx}
@@ -1009,6 +956,11 @@ function AlgoritmosTab({ parte2 }: { parte2: Parte2Data }) {
       {/* Feature 10: Algorithm flashcards */}
       <section className="space-y-4">
         <SectionTitle>Algoritmos Implementados</SectionTitle>
+        <p className="text-sm text-neutral-600">
+          Os quatro algoritmos de travessia e caminho mínimo implementados do zero. Cada cartão traz a
+          complexidade de tempo/espaço, o caso de uso típico e se o algoritmo suporta pesos negativos e
+          detecção de ciclos — os critérios que decidem qual usar em cada cenário.
+        </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {ALGO_CARDS.map((c) => (
             <AlgoFlashcard key={c.name} card={c} />
@@ -1393,12 +1345,21 @@ function PerformanceTab({ parte2 }: { parte2: Parte2Data }) {
       {/* Feature 16: Complexity table */}
       <section className="space-y-4">
         <SectionTitle>Tabela de Complexidades</SectionTitle>
+        <p className="text-sm text-neutral-600">
+          Comparativo das complexidades teóricas frente ao tempo real medido neste dataset. Confirma na
+          prática o que a teoria prevê: BFS e DFS (O(V+E)) são os mais rápidos, e Bellman-Ford (O(V×E))
+          é o mais custoso.
+        </p>
         <ComplexityTable perf={parte2.performance_summary} />
       </section>
 
       {/* Feature 17: Insights cards */}
       <section className="space-y-4">
         <SectionTitle>O Que o Grafo Revelou</SectionTitle>
+        <p className="text-sm text-neutral-600">
+          Principais conclusões extraídas da análise: conectividade da rede, por que Dijkstra não serve
+          para o grafo de humor, presença de ciclos e o custo relativo do Bellman-Ford.
+        </p>
         <InsightsCards parte2={parte2} />
       </section>
     </div>

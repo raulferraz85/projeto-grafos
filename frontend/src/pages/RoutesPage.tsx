@@ -5,6 +5,9 @@ import { EM_DASH, formatNumber } from "../lib/format";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
 import { formatDuration } from "../lib/dijkstra";
+import { ChartCard } from "../components/charts/ChartCard";
+import { Histogram } from "../components/charts/Histogram";
+import { BarChart, type BarDatum } from "../components/charts/BarChart";
 
 interface Props {
   data: AppData;
@@ -43,16 +46,33 @@ export function RoutesPage({ data, dataStatus }: Props) {
 
   const selected = routes.find((r) => routeKey(r) === selectedKey) ?? null;
 
-  const filtered = routes.filter((r) => {
-    if (!filter) return true;
-    const q = filter.toLowerCase();
-    return (
-      r.origin.toLowerCase().includes(q) ||
-      r.destination.toLowerCase().includes(q) ||
-      cityFor(r.origin).toLowerCase().includes(q) ||
-      cityFor(r.destination).toLowerCase().includes(q)
-    );
-  });
+  const filtered = useMemo(
+    () =>
+      routes.filter((r) => {
+        if (!filter) return true;
+        const q = filter.toLowerCase();
+        return (
+          r.origin.toLowerCase().includes(q) ||
+          r.destination.toLowerCase().includes(q) ||
+          cityFor(r.origin).toLowerCase().includes(q) ||
+          cityFor(r.destination).toLowerCase().includes(q)
+        );
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [routes, filter, airportByIata],
+  );
+
+  // ── Dados dos gráficos (reagem ao filtro de busca) ────────────────────────
+  const reachable = useMemo(() => filtered.filter((r) => r.reachable), [filtered]);
+  const durationValues = useMemo(() => reachable.map((r) => r.cost), [reachable]);
+  const hopsBars: BarDatum[] = useMemo(() => {
+    const m: Record<number, number> = {};
+    for (const r of reachable) m[r.hops] = (m[r.hops] ?? 0) + 1;
+    return Object.keys(m)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((h) => ({ label: `${h} salto${h !== 1 ? "s" : ""}`, value: m[h] }));
+  }, [reachable]);
 
   return (
     <div className="space-y-6">
@@ -158,6 +178,46 @@ export function RoutesPage({ data, dataStatus }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* ── Análise visual das rotas filtradas ───────────────────────────── */}
+      {live && (
+        <section className="space-y-4 pt-2">
+          <div>
+            <h3 className="text-base font-bold text-neutral-800">Análise das rotas</h3>
+            <p className="mt-0.5 text-sm text-neutral-600">
+              Os gráficos refletem as {reachable.length} rotas alcançáveis exibidas na tabela e
+              recalculam conforme você filtra por IATA ou cidade.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ChartCard
+              title="Distribuição de duração"
+              description="Quantas rotas caem em cada faixa de tempo total de voo (em minutos). Barra laranja = faixa mais comum; linha tracejada = duração média."
+            >
+              <Histogram
+                values={durationValues}
+                bins={10}
+                xLabel="Duração (min)"
+                valueFormatter={(v) => `${Math.round(v)}`}
+              />
+            </ChartCard>
+
+            <ChartCard
+              title="Distribuição de saltos"
+              description="Número de rotas por quantidade de escalas. Caminhos mínimos com poucos saltos indicam uma malha bem conectada por hubs."
+            >
+              <BarChart
+                data={hopsBars}
+                orientation="vertical"
+                valueName="rotas"
+                color="#38bdf8"
+                height={240}
+              />
+            </ChartCard>
+          </div>
+        </section>
+      )}
 
       <p className="text-xs text-neutral-400">
         ✦ Rotas obrigatórias do enunciado · Para pesquisar qualquer par dinamicamente, use a aba <strong>Grafo</strong>.

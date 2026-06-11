@@ -2,8 +2,13 @@ import { useMemo, useState } from "react";
 import type { Airport } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
 import { EM_DASH, formatPercentMetric } from "../lib/format";
+import { colorForRegion, REGION_COLORS } from "../lib/theme";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
+import { ChartCard, LegendDot } from "../components/charts/ChartCard";
+import { Histogram } from "../components/charts/Histogram";
+import { ScatterPlot, type ScatterPoint } from "../components/charts/ScatterPlot";
+import { DonutChart, type DonutDatum } from "../components/charts/DonutChart";
 
 interface Props {
   airports: Airport[];
@@ -11,14 +16,6 @@ interface Props {
 }
 
 type SortKey = "iata" | "city" | "degree" | "egoDensity" | "egoSize" | "egoOrder";
-
-const REGION_COLORS: Record<string, string> = {
-  Norte:          "#22c55e",
-  Nordeste:       "#f97316",
-  Sudeste:        "#38bdf8",
-  Sul:            "#a78bfa",
-  "Centro-Oeste": "#facc15",
-};
 
 const HUB_THRESHOLD = 20;
 
@@ -65,6 +62,29 @@ export function AirportsPage({ airports, dataStatus }: Props) {
 
   const avgDegree  = filtered.length > 0 ? filtered.reduce((s, a) => s + a.degree, 0)     / filtered.length : 0;
   const avgDensity = filtered.length > 0 ? filtered.reduce((s, a) => s + a.egoDensity, 0) / filtered.length : 0;
+
+  // ── Dados dos gráficos analíticos (reagem aos filtros ativos) ──────────────
+  const degreeValues = useMemo(() => filtered.map((a) => a.degree), [filtered]);
+
+  const scatterPoints: ScatterPoint[] = useMemo(
+    () =>
+      filtered.map((a) => ({
+        x: a.degree,
+        y: a.egoDensity,
+        label: a.iata,
+        color: colorForRegion(a.region),
+        sublabel: `${a.city || EM_DASH} · ${a.region || EM_DASH}`,
+      })),
+    [filtered],
+  );
+
+  const regionDonut: DonutDatum[] = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const a of filtered) if (a.region) m[a.region] = (m[a.region] ?? 0) + 1;
+    return Object.entries(m)
+      .sort((x, y) => y[1] - x[1])
+      .map(([region, count]) => ({ label: region, value: count, color: colorForRegion(region) }));
+  }, [filtered]);
 
   function toggleRow(iata: string) {
     setExpandedIata((prev) => (prev === iata ? null : iata));
@@ -264,6 +284,53 @@ export function AirportsPage({ airports, dataStatus }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* ── Análise visual do conjunto filtrado ──────────────────────────── */}
+      <section className="space-y-4 pt-2">
+        <div>
+          <h3 className="text-base font-bold text-neutral-800">Análise do conjunto filtrado</h3>
+          <p className="mt-0.5 text-sm text-neutral-600">
+            Os gráficos abaixo recalculam em tempo real conforme você ajusta a busca, a região e o
+            grau mínimo — sempre refletindo exatamente os {filtered.length} aeroportos visíveis na
+            tabela.
+          </p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ChartCard
+            title="Distribuição de grau"
+            description="Quantos aeroportos caem em cada faixa de grau (número de conexões diretas). Barra laranja = faixa mais comum; linha tracejada = grau médio do conjunto."
+          >
+            <Histogram values={degreeValues} bins={10} xLabel="Grau (conexões)" />
+          </ChartCard>
+
+          <ChartCard
+            title="Grau × densidade da ego-rede"
+            description="Cada ponto é um aeroporto. Eixo X = grau; eixo Y = densidade da vizinhança. Hubs ficam à direita; aeroportos com vizinhança muito interligada ficam no topo. Cor por região."
+            legend={regionDonut.map((d) => (
+              <LegendDot key={d.label} color={d.color ?? "#94a3b8"}>{d.label}</LegendDot>
+            ))}
+          >
+            <ScatterPlot
+              points={scatterPoints}
+              xLabel="Grau"
+              yLabel="Densidade ego"
+              yFormatter={(v) => `${Math.round(v * 100)}%`}
+            />
+          </ChartCard>
+        </div>
+
+        <ChartCard
+          title="Composição por região"
+          description="Proporção dos aeroportos filtrados em cada região do país. Útil para ver se um filtro está concentrado numa região específica."
+        >
+          <DonutChart
+            data={regionDonut}
+            centerLabel="aeroportos"
+            centerValue={String(filtered.length)}
+          />
+        </ChartCard>
+      </section>
     </div>
   );
 }
