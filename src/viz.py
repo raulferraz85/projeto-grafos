@@ -11,19 +11,7 @@ import matplotlib.patches as mpatches
 import seaborn as sns
 import pandas as pd
 
-REGION_COLORS = {
-    "Norte":        "#22c55e",
-    "Nordeste":     "#f97316",
-    "Sudeste":      "#38bdf8",
-    "Sul":          "#a78bfa",
-    "Centro-Oeste": "#facc15",
-}
-
-EDGE_COLORS = {
-    "hub_nacional":  "#ef4444",
-    "hub_regional":  "#fb923c",
-    "regional":      "#64748b",
-}
+from .lib.chart_style import REGION_COLORS, EDGE_COLORS, apply_chart_style
 
 _EDGE_LABELS = {
     "hub_nacional":  "Hub nacional (91)",
@@ -32,12 +20,10 @@ _EDGE_LABELS = {
 }
 
 def generate_path_tree(graph, paths, out_path):
-    """Gera arvore de percurso para os caminhos obrigatorios (HTML interativo via vis.js)."""
     colors_seq = ["#38bdf8", "#f97316", "#22c55e", "#a78bfa", "#facc15"]
 
-    # Collect all unique nodes and edges for the path subgraph
     path_nodes_set = set()
-    path_edges = []       # (u, v, color, name)
+    path_edges = []
     for i, (name, path) in enumerate(paths.items()):
         color = colors_seq[i % len(colors_seq)]
         for n in path:
@@ -45,13 +31,11 @@ def generate_path_tree(graph, paths, out_path):
         for j in range(len(path) - 1):
             path_edges.append((path[j], path[j + 1], color, name))
 
-    # Build vis data
     nodes = []
     for iata in path_nodes_set:
         node = graph.nodes.get(iata)
         city = node.city if node else ""
         region = node.region if node else ""
-        # Color: endpoint = brighter, intermediate = muted
         is_endpoint = any(
             iata == p[0] or iata == p[-1]
             for p in paths.values()
@@ -68,7 +52,6 @@ def generate_path_tree(graph, paths, out_path):
 
     edges = []
     for eid, (u, v, color, name) in enumerate(path_edges):
-        # Get edge weight from graph
         weight = 0.0
         for e in graph.adjacency_list.get(u, []):
             if e.target == v:
@@ -85,7 +68,6 @@ def generate_path_tree(graph, paths, out_path):
             "font":  {"size": 11, "color": "#e2e8f0", "strokeWidth": 2, "strokeColor": "#0f172a"},
         })
 
-    # Legend entries
     legend_items = "".join(
         f'<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">'
         f'<div style="width:24px;height:4px;background:{colors_seq[i % len(colors_seq)]};border-radius:2px;"></div>'
@@ -141,14 +123,7 @@ _TIPO_LABELS = {
 
 
 def _apply_chart_style():
-    sns.set_theme(style="whitegrid", palette="muted")
-    plt.rcParams.update({
-        "figure.facecolor": "white",
-        "axes.facecolor": "white",
-        "font.size": 10,
-        "axes.titlesize": 13,
-        "axes.labelsize": 11,
-    })
+    apply_chart_style(titlesize=13, labelsize=11)
 
 
 def _stats_box(ax, text: str, loc: str = "upper right"):
@@ -254,9 +229,6 @@ _LEGACY_PNGS = (
 
 
 def generate_exploratory_plots(out_dir, data_dir="data"):
-    """
-    Gera 10 bundles analiticos em out/grafico_<slug>/ (PNG + analise.md).
-    """
     for legacy in _LEGACY_PNGS:
         legacy_path = os.path.join(out_dir, legacy)
         if os.path.isfile(legacy_path):
@@ -266,25 +238,21 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
             shutil.rmtree(chart_dir)
 
     _apply_chart_style()
-    region_palette = dict(REGION_COLORS)
 
     ego_df = pd.read_csv(os.path.join(out_dir, "ego_aeroportos.csv"))
     airports_df = pd.read_csv(os.path.join(data_dir, "aeroportos_data.csv"))
     adj_df = pd.read_csv(os.path.join(data_dir, "adjacencias_aeroportos.csv"))
     routes_df = pd.read_csv(os.path.join(out_dir, "distancias_rotas.csv"))
 
-    regioes_path = os.path.join(out_dir, "regioes.json")
-    global_path = os.path.join(out_dir, "global.json")
-    with open(regioes_path, encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "regioes.json"), encoding="utf-8") as f:
         regioes_data = json.load(f)
-    with open(global_path, encoding="utf-8") as f:
+    with open(os.path.join(out_dir, "global.json"), encoding="utf-8") as f:
         global_data = json.load(f)
 
     region_map = airports_df.set_index("iata")["regiao"].to_dict()
     ego_df = ego_df.merge(
         airports_df[["iata", "regiao"]].rename(columns={"iata": "aeroporto"}),
-        on="aeroporto",
-        how="left",
+        on="aeroporto", how="left",
     )
     ego_df["regiao"] = ego_df["regiao"].fillna("Desconhecida")
 
@@ -294,19 +262,33 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     adj_df = adj_df.dropna(subset=["regiao_origem", "regiao_destino"])
 
     region_cats = [r for r in REGION_ORDER if r in ego_df["regiao"].unique()]
+
+    _plot_grau_por_regiao(out_dir, ego_df, region_cats)
+    _plot_densidade_ego_por_regiao(out_dir, ego_df, region_cats)
+    _plot_composicao_conexoes(out_dir, adj_df, region_cats)
+    _plot_duracao_por_tipo(out_dir, adj_df)
+    _plot_top_hubs(out_dir, ego_df, region_cats)
+    _plot_grau_vs_densidade_ego(out_dir, ego_df, region_cats)
+    _plot_rotas_minimas(out_dir, routes_df)
+    _plot_heatmap_duracao_regioes(out_dir, adj_df)
+    _plot_metricas_regionais(out_dir, regioes_data, global_data)
+    _plot_distribuicao_graus(out_dir, ego_df)
+
+    print("10 visualizações analíticas geradas em out/grafico_*/")
+
+
+def _plot_grau_por_regiao(out_dir, ego_df, region_cats):
+    region_palette = dict(REGION_COLORS)
     grau_stats = (
         ego_df.groupby("regiao")["grau"]
         .agg(
-            mediana="median",
-            media="mean",
+            mediana="median", media="mean",
             q1=lambda s: s.quantile(0.25),
             q3=lambda s: s.quantile(0.75),
             n="count",
         )
         .reindex(region_cats)
     )
-
-    # ── 1. Grau por região (barras: média + faixa IQR; mediana no rótulo) ─
     fig, ax = plt.subplots(figsize=(10, 5))
     x = np.arange(len(region_cats))
     means = grau_stats["media"].values
@@ -315,27 +297,20 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
         np.maximum(means - grau_stats["q1"].values, 0),
         np.maximum(grau_stats["q3"].values - means, 0),
     ])
-    colors = [region_palette.get(r, "#94a3b8") for r in region_cats]
     bars = ax.bar(
-        x, means, color=colors, edgecolor="#334155", linewidth=0.6,
-        yerr=yerr_iqr, capsize=4, error_kw={"elinewidth": 1.0, "ecolor": "#94a3b8", "alpha": 0.85},
+        x, means, color=[region_palette.get(r, "#94a3b8") for r in region_cats],
+        edgecolor="#334155", linewidth=0.6,
+        yerr=yerr_iqr, capsize=4,
+        error_kw={"elinewidth": 1.0, "ecolor": "#94a3b8", "alpha": 0.85},
     )
     ax.set_xticks(x)
     ax.set_xticklabels(region_cats, rotation=15)
     ax.set_ylim(bottom=0)
     for bar, mean, med in zip(bars, means, medians):
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.25,
-            f"{mean:.1f}",
-            ha="center", va="bottom", fontsize=10, fontweight="bold",
-        )
-        ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            max(bar.get_height() * 0.15, 0.4),
-            f"med={med:.0f}",
-            ha="center", va="bottom", fontsize=8, color="#475569",
-        )
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.25,
+                f"{mean:.1f}", ha="center", va="bottom", fontsize=10, fontweight="bold")
+        ax.text(bar.get_x() + bar.get_width() / 2, max(bar.get_height() * 0.15, 0.4),
+                f"med={med:.0f}", ha="center", va="bottom", fontsize=8, color="#475569")
     n_total = int(grau_stats["n"].sum())
     ax.set_title(
         "Como o grau médio varia por região?\n"
@@ -344,42 +319,37 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     )
     ax.set_xlabel("Região")
     ax.set_ylabel("Grau médio (conexões diretas)")
-    _stats_box(
-        ax,
-        f"n={n_total}\nμ global={ego_df['grau'].mean():.1f}\nmediana global={ego_df['grau'].median():.0f}",
-    )
+    _stats_box(ax, f"n={n_total}\nμ global={ego_df['grau'].mean():.1f}\nmediana global={ego_df['grau'].median():.0f}")
     tbl = grau_stats.reset_index().rename(columns={"regiao": "Região"})
     tbl["mediana"] = tbl["mediana"].map(lambda v: f"{v:.0f}")
     tbl["media"] = tbl["media"].map(lambda v: f"{v:.1f}")
     tbl["q1"] = tbl["q1"].map(lambda v: f"{v:.1f}")
     tbl["q3"] = tbl["q3"].map(lambda v: f"{v:.1f}")
     tbl["n"] = tbl["n"].astype(int)
-    _save_chart_bundle(
-        out_dir, "grau_por_regiao", fig,
-        _build_analise_md(
-            "Grau por região",
-            "Como o grau médio varia por região?",
-            ["`ego_aeroportos.csv`: grau", "`aeroportos_data.csv`: região por IATA"],
-            _df_to_md_table(tbl),
-            [
-                f"Região com maior grau médio: **{grau_stats['media'].idxmax()}** ({grau_stats['media'].max():.1f}).",
-                f"Região com menor grau médio: **{grau_stats['media'].idxmin()}** ({grau_stats['media'].min():.1f}).",
-                f"A mediana é **{grau_stats['mediana'].iloc[0]:.0f}** em todas as regiões — hubs puxam a média para cima; compare as barras e o IQR.",
-            ],
-            ["Média sensível a hubs (ex.: BEL); mediana sozinha não separa regiões neste dataset."],
-        ),
-    )
+    _save_chart_bundle(out_dir, "grau_por_regiao", fig, _build_analise_md(
+        "Grau por região",
+        "Como o grau médio varia por região?",
+        ["`ego_aeroportos.csv`: grau", "`aeroportos_data.csv`: região por IATA"],
+        _df_to_md_table(tbl),
+        [
+            f"Região com maior grau médio: **{grau_stats['media'].idxmax()}** ({grau_stats['media'].max():.1f}).",
+            f"Região com menor grau médio: **{grau_stats['media'].idxmin()}** ({grau_stats['media'].min():.1f}).",
+            f"A mediana é **{grau_stats['mediana'].iloc[0]:.0f}** em todas as regiões — hubs puxam a média para cima; compare as barras e o IQR.",
+        ],
+        ["Média sensível a hubs (ex.: BEL); mediana sozinha não separa regiões neste dataset."],
+    ))
 
-    # ── 2. Densidade ego por região (barras: média) ───────────────────
-    ego_density_stats = (
+
+def _plot_densidade_ego_por_regiao(out_dir, ego_df, region_cats):
+    region_palette = dict(REGION_COLORS)
+    stats = (
         ego_df.groupby("regiao")["densidade_ego"]
         .agg(media="mean", mediana="median", n="count")
         .reindex(region_cats)
     )
     fig, ax = plt.subplots(figsize=(10, 5))
-    means_ego = ego_density_stats["media"].values
     bars = ax.bar(
-        range(len(region_cats)), means_ego,
+        range(len(region_cats)), stats["media"].values,
         color=[region_palette.get(r, "#94a3b8") for r in region_cats],
         edgecolor="#334155", linewidth=0.6,
     )
@@ -399,30 +369,26 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
         f"μ={ego_df['densidade_ego'].mean():.4f}\nmed={ego_df['densidade_ego'].median():.4f}",
         loc="upper left",
     )
-    tbl_ego = ego_density_stats.reset_index().rename(columns={"regiao": "Região"})
-    tbl_ego["media"] = tbl_ego["media"].map(lambda v: f"{v:.4f}")
-    tbl_ego["mediana"] = tbl_ego["mediana"].map(lambda v: f"{v:.4f}")
-    _save_chart_bundle(
-        out_dir, "densidade_ego_por_regiao", fig,
-        _build_analise_md(
-            "Densidade ego por região",
-            "Qual região tem ego-redes mais densas?",
-            ["`ego_aeroportos.csv`: densidade_ego", "`aeroportos_data.csv`: região"],
-            _df_to_md_table(tbl_ego),
-            [
-                f"Maior coesão média local: **{ego_density_stats['media'].idxmax()}** ({ego_density_stats['media'].max():.4f}).",
-                f"Menor média: **{ego_density_stats['media'].idxmin()}** ({ego_density_stats['media'].min():.4f}).",
-                "Densidade ego alta indica que os vizinhos de um aeroporto também se conectam entre si.",
-            ],
-            ["Média regional pode mascarar aeroportos isolados dentro da mesma região."],
-        ),
-    )
+    tbl = stats.reset_index().rename(columns={"regiao": "Região"})
+    tbl["media"] = tbl["media"].map(lambda v: f"{v:.4f}")
+    tbl["mediana"] = tbl["mediana"].map(lambda v: f"{v:.4f}")
+    _save_chart_bundle(out_dir, "densidade_ego_por_regiao", fig, _build_analise_md(
+        "Densidade ego por região",
+        "Qual região tem ego-redes mais densas?",
+        ["`ego_aeroportos.csv`: densidade_ego", "`aeroportos_data.csv`: região"],
+        _df_to_md_table(tbl),
+        [
+            f"Maior coesão média local: **{stats['media'].idxmax()}** ({stats['media'].max():.4f}).",
+            f"Menor média: **{stats['media'].idxmin()}** ({stats['media'].min():.4f}).",
+            "Densidade ego alta indica que os vizinhos de um aeroporto também se conectam entre si.",
+        ],
+        ["Média regional pode mascarar aeroportos isolados dentro da mesma região."],
+    ))
 
-    # ── 3. Composição conexões (empilhado 100%) ─────────────────────
+
+def _plot_composicao_conexoes(out_dir, adj_df, region_cats):
     tipo_by_region = (
-        adj_df.groupby(["regiao_origem", "tipo"])
-        .size()
-        .unstack(fill_value=0)
+        adj_df.groupby(["regiao_origem", "tipo"]).size().unstack(fill_value=0)
     )
     for col in ["hub_nacional", "hub_regional", "regional"]:
         if col not in tipo_by_region.columns:
@@ -473,26 +439,23 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
             "Total": int(row.sum()),
         })
     abs_tbl = pd.DataFrame(abs_rows)
-    _save_chart_bundle(
-        out_dir, "composicao_conexoes", fig,
-        _build_analise_md(
-            "Composição das conexões",
-            "Qual o mix hub nacional / regional / voo por região de origem?",
-            ["`adjacencias_aeroportos.csv`: tipo_conexao, origem", "Região mapeada via IATA"],
-            _df_to_md_table(abs_tbl) + "\n\n" + _df_to_md_table(
-                tipo_pct.reset_index().rename(columns={"regiao_origem": "Região"})
-                .round(1)
-            ),
-            [
-                "Sudeste e Sul tendem a maior fatia de hub nacional (rotas de longo alcance).",
-                "Centro-Oeste concentra proporção maior de voos regionais em alguns recortes.",
-                "Percentuais no gráfico aparecem em segmentos ≥ 8%; totais absolutos na tabela acima.",
-            ],
-            ["Contagem por aresta direcionada na lista de adjacências (426 conexões no grafo)."],
+    _save_chart_bundle(out_dir, "composicao_conexoes", fig, _build_analise_md(
+        "Composição das conexões",
+        "Qual o mix hub nacional / regional / voo por região de origem?",
+        ["`adjacencias_aeroportos.csv`: tipo_conexao, origem", "Região mapeada via IATA"],
+        _df_to_md_table(abs_tbl) + "\n\n" + _df_to_md_table(
+            tipo_pct.reset_index().rename(columns={"regiao_origem": "Região"}).round(1)
         ),
-    )
+        [
+            "Sudeste e Sul tendem a maior fatia de hub nacional (rotas de longo alcance).",
+            "Centro-Oeste concentra proporção maior de voos regionais em alguns recortes.",
+            "Percentuais no gráfico aparecem em segmentos ≥ 8%; totais absolutos na tabela acima.",
+        ],
+        ["Contagem por aresta direcionada na lista de adjacências (426 conexões no grafo)."],
+    ))
 
-    # ── 4. Duração por tipo (barras: mediana, sem whiskers min–max) ───
+
+def _plot_duracao_por_tipo(out_dir, adj_df):
     tipo_order = ["hub_nacional", "hub_regional", "regional"]
     dur_stats = adj_df.groupby("tipo")["peso"].agg(
         mediana="median",
@@ -532,29 +495,28 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     dur_tbl = dur_stats.reset_index()
     dur_tbl["tipo"] = dur_tbl["tipo"].map(_TIPO_LABELS)
     dur_tbl = dur_tbl.rename(columns={"tipo": "Tipo", "mediana": "Mediana", "q1": "P25", "q3": "P75"})
-    _save_chart_bundle(
-        out_dir, "duracao_por_tipo", fig,
-        _build_analise_md(
-            "Duração por tipo",
-            "Qual a duração típica (mediana) por tipo de conexão?",
-            ["`adjacencias_aeroportos.csv`: peso (min), tipo_conexao"],
-            _df_to_md_table(dur_tbl),
-            [
-                f"Tipo com maior mediana: **{_TIPO_LABELS[dur_stats['mediana'].idxmax()]}** ({dur_stats['mediana'].max():.0f} min).",
-                f"Tipo com menor mediana: **{_TIPO_LABELS[dur_stats['mediana'].idxmin()]}** ({dur_stats['mediana'].min():.0f} min).",
-                "Peso = distância / 800 km/h + 30 min de manobra (modelo do dataset).",
-            ],
-            ["IQR (P25–P75) resume a dispersão típica; extremos isolados ficam fora dessa faixa."],
-        ),
-    )
+    _save_chart_bundle(out_dir, "duracao_por_tipo", fig, _build_analise_md(
+        "Duração por tipo",
+        "Qual a duração típica (mediana) por tipo de conexão?",
+        ["`adjacencias_aeroportos.csv`: peso (min), tipo_conexao"],
+        _df_to_md_table(dur_tbl),
+        [
+            f"Tipo com maior mediana: **{_TIPO_LABELS[dur_stats['mediana'].idxmax()]}** ({dur_stats['mediana'].max():.0f} min).",
+            f"Tipo com menor mediana: **{_TIPO_LABELS[dur_stats['mediana'].idxmin()]}** ({dur_stats['mediana'].min():.0f} min).",
+            "Peso = distância / 800 km/h + 30 min de manobra (modelo do dataset).",
+        ],
+        ["IQR (P25–P75) resume a dispersão típica; extremos isolados ficam fora dessa faixa."],
+    ))
 
-    # ── 5. Top 15 hubs ────────────────────────────────────────────────
+
+def _plot_top_hubs(out_dir, ego_df, region_cats):
+    region_palette = dict(REGION_COLORS)
     top_15 = ego_df.nlargest(15, "grau").sort_values("grau")
     fig, ax = plt.subplots(figsize=(10, 7))
-    bar_colors = [region_palette.get(r, "#94a3b8") for r in top_15["regiao"]]
     bars = ax.barh(
         top_15["aeroporto"], top_15["grau"],
-        color=bar_colors, edgecolor="#334155", linewidth=0.8,
+        color=[region_palette.get(r, "#94a3b8") for r in top_15["regiao"]],
+        edgecolor="#334155", linewidth=0.8,
     )
     ax.bar_label(bars, padding=4, fontsize=9)
     if len(bars) > 0:
@@ -573,23 +535,22 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     top_tbl = top_15[["aeroporto", "regiao", "grau"]].rename(
         columns={"aeroporto": "IATA", "regiao": "Região", "grau": "Grau"}
     )
-    _save_chart_bundle(
-        out_dir, "top_hubs", fig,
-        _build_analise_md(
-            "Top hubs",
-            "Quais aeroportos concentram mais conexões diretas?",
-            ["`ego_aeroportos.csv`: grau", "`aeroportos_data.csv`: região"],
-            _df_to_md_table(top_tbl.sort_values("Grau", ascending=False)),
-            [
-                f"**{hub1['aeroporto']}** lidera com grau **{int(hub1['grau'])}** ({hub1['regiao']}).",
-                f"15º do ranking: **{top_15.iloc[-1]['aeroporto']}** (grau {int(top_15.iloc[-1]['grau'])}).",
-                "Cores seguem a paleta regional do grafo interativo.",
-            ],
-            ["Ranking por grau simples; não pondera frequência de voos reais."],
-        ),
-    )
+    _save_chart_bundle(out_dir, "top_hubs", fig, _build_analise_md(
+        "Top hubs",
+        "Quais aeroportos concentram mais conexões diretas?",
+        ["`ego_aeroportos.csv`: grau", "`aeroportos_data.csv`: região"],
+        _df_to_md_table(top_tbl.sort_values("Grau", ascending=False)),
+        [
+            f"**{hub1['aeroporto']}** lidera com grau **{int(hub1['grau'])}** ({hub1['regiao']}).",
+            f"15º do ranking: **{top_15.iloc[-1]['aeroporto']}** (grau {int(top_15.iloc[-1]['grau'])}).",
+            "Cores seguem a paleta regional do grafo interativo.",
+        ],
+        ["Ranking por grau simples; não pondera frequência de voos reais."],
+    ))
 
-    # ── 6. Grau × densidade ego (scatter + Pearson) ───────────────────
+
+def _plot_grau_vs_densidade_ego(out_dir, ego_df, region_cats):
+    region_palette = dict(REGION_COLORS)
     pearson_r = ego_df["grau"].corr(ego_df["densidade_ego"])
     fig, ax = plt.subplots(figsize=(10, 6))
     for reg in region_cats:
@@ -623,31 +584,27 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
         "Quadrante superior direito: hubs conectados e vizinhança densa; "
         "inferior direito: muitas conexões mas ego-rede esparsa."
     )
-    _save_chart_bundle(
-        out_dir, "grau_vs_densidade_ego", fig,
-        _build_analise_md(
-            "Grau vs densidade ego",
-            "Aeroportos com grau alto têm ego-redes mais densas?",
-            ["`ego_aeroportos.csv`: grau, densidade_ego"],
-            _df_to_md_table(
-                top5[["aeroporto", "grau", "densidade_ego", "regiao"]]
-                .rename(columns={"aeroporto": "IATA", "regiao": "Região"})
-            ),
-            [
-                f"Correlação linear r = **{pearson_r:.3f}** "
-                + ("(positiva fraca a moderada)." if pearson_r > 0.2 else "(fraca ou inexistente)."),
-                quad_text,
-                "Top 5 por grau anotados no gráfico.",
-            ],
-            ["Correlação não implica causalidade; outliers regionais podem dominar r."],
+    _save_chart_bundle(out_dir, "grau_vs_densidade_ego", fig, _build_analise_md(
+        "Grau vs densidade ego",
+        "Aeroportos com grau alto têm ego-redes mais densas?",
+        ["`ego_aeroportos.csv`: grau, densidade_ego"],
+        _df_to_md_table(
+            top5[["aeroporto", "grau", "densidade_ego", "regiao"]]
+            .rename(columns={"aeroporto": "IATA", "regiao": "Região"})
         ),
-    )
+        [
+            f"Correlação linear r = **{pearson_r:.3f}** "
+            + ("(positiva fraca a moderada)." if pearson_r > 0.2 else "(fraca ou inexistente)."),
+            quad_text,
+            "Top 5 por grau anotados no gráfico.",
+        ],
+        ["Correlação não implica causalidade; outliers regionais podem dominar r."],
+    ))
 
-    # ── 7. Rotas mínimas (barh por rota) ──────────────────────────────
+
+def _plot_rotas_minimas(out_dir, routes_df):
     valid_routes = routes_df[routes_df["custo"] > 0].copy()
-    valid_routes["rota"] = (
-        valid_routes["origem"] + "→" + valid_routes["destino"]
-    )
+    valid_routes["rota"] = valid_routes["origem"] + "→" + valid_routes["destino"]
     valid_routes = valid_routes.sort_values("custo")
 
     fig, ax = plt.subplots(figsize=(10, max(4, 0.8 * len(valid_routes) + 2)))
@@ -680,25 +637,23 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     ) if not valid_routes.empty else pd.DataFrame()
     min_row = valid_routes.loc[valid_routes["custo"].idxmin()] if not valid_routes.empty else None
     max_row = valid_routes.loc[valid_routes["custo"].idxmax()] if not valid_routes.empty else None
-    _save_chart_bundle(
-        out_dir, "rotas_minimas", fig,
-        _build_analise_md(
-            "Rotas mínimas",
-            "Quanto tempo leva cada rota em rotas.csv?",
-            ["`distancias_rotas.csv`: custo, caminho", "`data/rotas.csv`: pares solicitados"],
-            _df_to_md_table(route_tbl) if not route_tbl.empty else "_Sem rotas._",
-            [
-                f"Rota mais rápida: **{min_row['rota']}** ({min_row['custo']:.0f} min) — {min_row['caminho']}."
-                if min_row is not None else "Sem dados.",
-                f"Rota mais lenta: **{max_row['rota']}** ({max_row['custo']:.0f} min) — {max_row['caminho']}."
-                if max_row is not None else "",
-                "Uma barra por par (adequado para poucos pontos; histograma seria enganoso).",
-            ],
-            [f"Apenas **{len(valid_routes)}** rotas em `rotas.csv`; amostra pequena para inferência estatística."],
-        ),
-    )
+    _save_chart_bundle(out_dir, "rotas_minimas", fig, _build_analise_md(
+        "Rotas mínimas",
+        "Quanto tempo leva cada rota em rotas.csv?",
+        ["`distancias_rotas.csv`: custo, caminho", "`data/rotas.csv`: pares solicitados"],
+        _df_to_md_table(route_tbl) if not route_tbl.empty else "_Sem rotas._",
+        [
+            f"Rota mais rápida: **{min_row['rota']}** ({min_row['custo']:.0f} min) — {min_row['caminho']}."
+            if min_row is not None else "Sem dados.",
+            f"Rota mais lenta: **{max_row['rota']}** ({max_row['custo']:.0f} min) — {max_row['caminho']}."
+            if max_row is not None else "",
+            "Uma barra por par (adequado para poucos pontos; histograma seria enganoso).",
+        ],
+        [f"Apenas **{len(valid_routes)}** rotas em `rotas.csv`; amostra pequena para inferência estatística."],
+    ))
 
-    # ── 8. Heatmap duração entre regiões ──────────────────────────────
+
+def _plot_heatmap_duracao_regioes(out_dir, adj_df):
     heatmap_df = (
         adj_df.groupby(["regiao_origem", "regiao_destino"])["peso"]
         .mean()
@@ -765,30 +720,29 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
         lambda v: f"{v:.0f}" if pd.notna(v) else "sem voo direto"
     )
     missing_pairs = hm_long[hm_long["Min médios"] == "sem voo direto"]
-    _save_chart_bundle(
-        out_dir, "duracao_entre_regioes", fig,
-        _build_analise_md(
-            "Duração entre regiões",
-            "Qual a duração média de conexão entre pares de regiões?",
-            ["`adjacencias_aeroportos.csv`: peso, origem, destino", "Agregação: média por par regional"],
-            _df_to_md_table(hm_long) if not hm_long.empty else "_Sem dados._",
-            [
-                f"Par mais curto (média): **{min_pair[0]} → {min_pair[1]}** ({flat_valid.min():.0f} min)."
-                if not flat_valid.empty else "",
-                f"Par mais longo (média): **{max_pair[0]} → {max_pair[1]}** ({flat_valid.max():.0f} min)."
-                if not flat_valid.empty else "",
-                "Escala de cores: amarelo (menor) a vermelho (maior) em minutos.",
-                "Células cinza: não há voo direto entre as regiões no dataset "
-                + (
-                    f"(ex.: **{missing_pairs.iloc[0]['Origem']} → {missing_pairs.iloc[0]['Destino']}**)."
-                    if not missing_pairs.empty else ""
-                ),
-            ],
-            ["Média por par regional; conexões podem existir com escalas em outras rotas."],
-        ),
-    )
+    _save_chart_bundle(out_dir, "duracao_entre_regioes", fig, _build_analise_md(
+        "Duração entre regiões",
+        "Qual a duração média de conexão entre pares de regiões?",
+        ["`adjacencias_aeroportos.csv`: peso, origem, destino", "Agregação: média por par regional"],
+        _df_to_md_table(hm_long) if not hm_long.empty else "_Sem dados._",
+        [
+            f"Par mais curto (média): **{min_pair[0]} → {min_pair[1]}** ({flat_valid.min():.0f} min)."
+            if not flat_valid.empty else "",
+            f"Par mais longo (média): **{max_pair[0]} → {max_pair[1]}** ({flat_valid.max():.0f} min)."
+            if not flat_valid.empty else "",
+            "Escala de cores: amarelo (menor) a vermelho (maior) em minutos.",
+            "Células cinza: não há voo direto entre as regiões no dataset "
+            + (
+                f"(ex.: **{missing_pairs.iloc[0]['Origem']} → {missing_pairs.iloc[0]['Destino']}**)."
+                if not missing_pairs.empty else ""
+            ),
+        ],
+        ["Média por par regional; conexões podem existir com escalas em outras rotas."],
+    ))
 
-    # ── 9. Métricas regionais (subgrafo por região) ───────────────────
+
+def _plot_metricas_regionais(out_dir, regioes_data, global_data):
+    region_palette = dict(REGION_COLORS)
     reg_df = pd.DataFrame(regioes_data).rename(
         columns={"region": "regiao", "order": "ordem", "size": "tamanho", "density": "densidade"}
     )
@@ -829,24 +783,21 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     fig.tight_layout()
     reg_tbl = reg_df.copy()
     reg_tbl["densidade"] = reg_tbl["densidade"].map(lambda v: f"{v:.4f}")
-    _save_chart_bundle(
-        out_dir, "metricas_regionais", fig,
-        _build_analise_md(
-            "Métricas regionais",
-            "Como ordem, tamanho e densidade do subgrafo induzido variam por região?",
-            ["`regioes.json`: order, size, density por região", "`global.json`: métricas do grafo completo"],
-            _df_to_md_table(reg_tbl.rename(columns={"regiao": "Região"})),
-            [
-                f"Maior densidade regional: **{reg_df.loc[reg_df['densidade'].idxmax(), 'regiao']}**.",
-                f"Maior subgrafo (ordem): **{reg_df.loc[reg_df['ordem'].idxmax(), 'regiao']}** ({int(reg_df['ordem'].max())} vértices).",
-                f"Grafo completo: {global_data['order']} aeroportos, {global_data['size']} conexões.",
-            ],
-            ["Subgrafos são induzidos por região; arestas só entre aeroportos da mesma região."],
-        ),
-    )
+    _save_chart_bundle(out_dir, "metricas_regionais", fig, _build_analise_md(
+        "Métricas regionais",
+        "Como ordem, tamanho e densidade do subgrafo induzido variam por região?",
+        ["`regioes.json`: order, size, density por região", "`global.json`: métricas do grafo completo"],
+        _df_to_md_table(reg_tbl.rename(columns={"regiao": "Região"})),
+        [
+            f"Maior densidade regional: **{reg_df.loc[reg_df['densidade'].idxmax(), 'regiao']}**.",
+            f"Maior subgrafo (ordem): **{reg_df.loc[reg_df['ordem'].idxmax(), 'regiao']}** ({int(reg_df['ordem'].max())} vértices).",
+            f"Grafo completo: {global_data['order']} aeroportos, {global_data['size']} conexões.",
+        ],
+        ["Subgrafos são induzidos por região; arestas só entre aeroportos da mesma região."],
+    ))
 
-    # ── 10. Histograma de distribuição de graus (hubs destacados) ─────
-    # Lei da Proximidade (Gestalt): a cauda direita agrupa visualmente os hubs.
+
+def _plot_distribuicao_graus(out_dir, ego_df):
     graus = ego_df["grau"].values
     hub_threshold = float(np.percentile(graus, 90))
     bins = np.arange(graus.min(), graus.max() + 2) - 0.5
@@ -855,7 +806,6 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
     counts, bin_edges, patches = ax.hist(
         graus, bins=bins, edgecolor="#334155", linewidth=0.6,
     )
-    # Barras da cauda (grau >= P90) pintadas como "hub", demais como "comum"
     for patch, left in zip(patches, bin_edges[:-1]):
         center = left + 0.5
         patch.set_facecolor("#ef4444" if center >= hub_threshold else "#38bdf8")
@@ -863,7 +813,6 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
                label=f"Limiar de hub (P90 = grau {hub_threshold:.0f})")
     ax.axvline(graus.mean(), color="#facc15", linestyle="-.", linewidth=1.5,
                label=f"Média ({graus.mean():.1f})")
-    # Anota os 5 maiores hubs sobre a cauda
     top5_hubs = ego_df.nlargest(5, "grau")
     y_annot = max(counts) * 0.55
     for rank, (_, row) in enumerate(top5_hubs.iterrows()):
@@ -899,28 +848,23 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
             f"{hub_threshold:.0f}", f"{graus.max():.0f}", f"{hub_count}",
         ],
     })
-    _save_chart_bundle(
-        out_dir, "distribuicao_graus", fig,
-        _build_analise_md(
-            "Distribuição de graus",
-            "Como se distribuem os graus dos aeroportos da malha?",
-            ["`ego_aeroportos.csv`: grau de cada aeroporto"],
-            _df_to_md_table(hist_tbl),
-            [
-                "A distribuição é **assimétrica à direita**: a maioria dos aeroportos tem poucas "
-                "conexões e uma minoria (hubs, em vermelho) concentra grande parte das arestas.",
-                f"O limiar de hub (P90) é grau **{hub_threshold:.0f}**; {hub_count} aeroportos estão acima dele "
-                f"(top: {', '.join(top5_hubs['aeroporto'].tolist())}).",
-                "Padrão típico de redes de transporte hub-and-spoke: a média "
-                f"({graus.mean():.1f}) fica bem acima da mediana ({np.median(graus):.0f}).",
-                "Gestalt — Proximidade: a separação visual entre o corpo (azul) e a cauda (vermelho) "
-                "agrupa os hubs sem precisar de rótulos.",
-            ],
-            [
-                "Grau conta conexões distintas, não frequência de voos; um hub com poucas rotas "
-                "muito frequentes seria subestimado.",
-            ],
-        ),
-    )
-
-    print("10 visualizações analíticas geradas em out/grafico_*/")
+    _save_chart_bundle(out_dir, "distribuicao_graus", fig, _build_analise_md(
+        "Distribuição de graus",
+        "Como se distribuem os graus dos aeroportos da malha?",
+        ["`ego_aeroportos.csv`: grau de cada aeroporto"],
+        _df_to_md_table(hist_tbl),
+        [
+            "A distribuição é **assimétrica à direita**: a maioria dos aeroportos tem poucas "
+            "conexões e uma minoria (hubs, em vermelho) concentra grande parte das arestas.",
+            f"O limiar de hub (P90) é grau **{hub_threshold:.0f}**; {hub_count} aeroportos estão acima dele "
+            f"(top: {', '.join(top5_hubs['aeroporto'].tolist())}).",
+            "Padrão típico de redes de transporte hub-and-spoke: a média "
+            f"({graus.mean():.1f}) fica bem acima da mediana ({np.median(graus):.0f}).",
+            "Gestalt — Proximidade: a separação visual entre o corpo (azul) e a cauda (vermelho) "
+            "agrupa os hubs sem precisar de rótulos.",
+        ],
+        [
+            "Grau conta conexões distintas, não frequência de voos; um hub com poucas rotas "
+            "muito frequentes seria subestimado.",
+        ],
+    ))

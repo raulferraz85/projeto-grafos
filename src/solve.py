@@ -1,14 +1,13 @@
 import json
 import csv
 import os
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 from .graphs.graph import Graph, Node
 from .graphs.algorithms import bfs, dijkstra, get_path
 
-def calculate_global_metrics(graph: Graph, out_dir: str):
-    """Calcula métricas globais do grafo e salva em global.json."""
-    # Conectividade verificada com a própria BFS: o grafo é conectado se uma
-    # varredura a partir de qualquer nó alcança todos os demais.
+
+def calculate_global_metrics(graph: Graph, out_dir: str) -> Dict[str, Any]:
     first_node = next(iter(graph.nodes), None)
     connected = (
         len(bfs(graph, first_node)) == graph.get_order() if first_node else False
@@ -25,17 +24,16 @@ def calculate_global_metrics(graph: Graph, out_dir: str):
         json.dump(metrics, f, indent=4)
     return metrics
 
-def calculate_regional_metrics(graph: Graph, out_dir: str):
-    """Calcula métricas para subgrafos induzidos por região e salva em regioes.json."""
-    regions = {}
+
+def calculate_regional_metrics(graph: Graph, out_dir: str) -> List[Dict[str, Any]]:
+    regions: Dict[str, List[str]] = {}
     for node in graph.nodes.values():
         if node.region not in regions:
             regions[node.region] = []
         regions[node.region].append(node.iata)
 
-    regional_metrics = []
+    regional_metrics: List[Dict[str, Any]] = []
     for region, nodes in regions.items():
-        # Subgrafo induzido
         subgraph = Graph(directed=graph.directed)
         for iata in nodes:
             subgraph.add_node(graph.nodes[iata])
@@ -43,7 +41,6 @@ def calculate_regional_metrics(graph: Graph, out_dir: str):
         for iata in nodes:
             for edge in graph.adjacency_list[iata]:
                 if edge.target in nodes:
-                    # Evita contagem dupla para grafos não-direcionados
                     if not graph.directed and iata > edge.target:
                         continue
                     subgraph.add_edge(edge.source, edge.target, edge.connection_type, edge.justification, edge.weight)
@@ -59,14 +56,13 @@ def calculate_regional_metrics(graph: Graph, out_dir: str):
         json.dump(regional_metrics, f, indent=4)
     return regional_metrics
 
-def calculate_ego_metrics(graph: Graph, out_dir: str):
-    """Calcula métricas de ego-redes para cada aeroporto e salva em arquivos CSV."""
-    ego_data = []
+
+def calculate_ego_metrics(graph: Graph, out_dir: str) -> List[Dict[str, Any]]:
+    ego_data: List[Dict[str, Any]] = []
     for iata in graph.nodes:
         neighbors = graph.get_neighbors(iata)
         ego_nodes = set(neighbors + [iata])
 
-        # Subgrafo da ego-rede
         subgraph = Graph(directed=graph.directed)
         for node_iata in ego_nodes:
             subgraph.add_node(graph.nodes[node_iata])
@@ -86,13 +82,11 @@ def calculate_ego_metrics(graph: Graph, out_dir: str):
             "densidade_ego": subgraph.get_density()
         })
 
-    # out/ego_aeroportos.csv
     with open(os.path.join(out_dir, "ego_aeroportos.csv"), "w", encoding="utf-8", newline='') as f:
         writer = csv.DictWriter(f, fieldnames=["aeroporto", "grau", "ordem_ego", "tamanho_ego", "densidade_ego"])
         writer.writeheader()
         writer.writerows(ego_data)
 
-    # out/graus.csv
     with open(os.path.join(out_dir, "graus.csv"), "w", encoding="utf-8", newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["aeroporto", "grau"])
@@ -101,17 +95,17 @@ def calculate_ego_metrics(graph: Graph, out_dir: str):
 
     return ego_data
 
-def find_rankings(ego_data: List[Dict[str, Any]]):
-    """Identifica e imprime os aeroportos de destaque."""
+
+def find_rankings(ego_data: List[Dict[str, Any]]) -> None:
     most_connected = max(ego_data, key=lambda x: x["grau"])
     highest_local_density = max(ego_data, key=lambda x: x["densidade_ego"])
 
     print(f"Aeroporto mais conectado: {most_connected['aeroporto']} (grau {most_connected['grau']})")
     print(f"Aeroporto com maior densidade local: {highest_local_density['aeroporto']} (densidade {highest_local_density['densidade_ego']:.4f})")
 
-def process_routes(graph: Graph, routes: List[tuple], out_dir: str):
-    """Calcula caminhos mínimos para uma lista de rotas e salva em distancias_rotas.csv."""
-    route_results = []
+
+def process_routes(graph: Graph, routes: List[tuple], out_dir: str) -> List[Dict[str, Any]]:
+    route_results: List[Dict[str, Any]] = []
     for origin, destination in routes:
         try:
             distances, predecessors = dijkstra(graph, origin, destination)

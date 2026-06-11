@@ -1,6 +1,3 @@
-"""
-Executa BFS, DFS, Dijkstra e Bellman-Ford no grafo Spotify e gera out/parte2_report.json.
-"""
 
 from __future__ import annotations
 
@@ -17,7 +14,6 @@ from .loader import load_mood_graph, load_spotify_graph
 
 
 def _pick_sources(graph: Graph) -> List[str]:
-    """Retorna 3 nós: maior grau, mediano, menor grau."""
     degrees = sorted(graph.nodes.keys(), key=lambda n: len(graph.adjacency_list.get(n, [])))
     n = len(degrees)
     if n < 3:
@@ -26,16 +22,14 @@ def _pick_sources(graph: Graph) -> List[str]:
 
 
 def _make_negative_cycle_graph() -> Graph:
-    """Grafo sintético dirigido com 4 nós e ciclo negativo S1→S2→S3→S1 (soma = -3.5)."""
     g = Graph(directed=True)
     for i in range(4):
         g.add_node(Node(iata=f"S{i}", city=f"Sintético {i}", region="Sintético"))
-    # edges
     for src, tgt, w in [
         ("S0", "S1",  2.0),
         ("S1", "S2", -1.0),
         ("S2", "S3", -1.0),
-        ("S3", "S1", -1.5),   # fecha o ciclo negativo (soma = -3.5)
+        ("S3", "S1", -1.5),
         ("S0", "S3",  5.0),
     ]:
         g.add_edge(src, tgt, "synthetic", f"peso={w}", w)
@@ -43,7 +37,6 @@ def _make_negative_cycle_graph() -> Graph:
 
 
 def _induced_subgraph(graph: Graph, node_ids: List[str]) -> Graph:
-    """Subgrafo induzido pelos node_ids (mantém apenas arestas internas ao conjunto)."""
     keep = set(node_ids)
     sub = Graph(directed=graph.directed)
     for nid in node_ids:
@@ -57,7 +50,6 @@ def _induced_subgraph(graph: Graph, node_ids: List[str]) -> Graph:
 
 
 def _measure_peak_memory(fn) -> float:
-    """Executa fn() medindo o pico de memória alocada (KB) via tracemalloc."""
     tracemalloc.start()
     fn()
     _, peak = tracemalloc.get_traced_memory()
@@ -66,11 +58,6 @@ def _measure_peak_memory(fn) -> float:
 
 
 def _run_scaling_experiment(graph: Graph, all_nodes: List[str]) -> List[Dict[str, Any]]:
-    """
-    Mede como o tempo de cada algoritmo escala com a ordem do grafo
-    (subgrafos induzidos de tamanhos crescentes). Alimenta o gráfico de
-    dispersão Ordem × Tempo de Execução.
-    """
     if not all_nodes:
         return []
     sizes = [s for s in (500, 1000, 1500, 2000, 2500, 3000) if s <= len(all_nodes)]
@@ -112,7 +99,6 @@ def _run_scaling_experiment(graph: Graph, all_nodes: List[str]) -> List[Dict[str
 
 
 def _build_graph_sample(graph: Graph, all_nodes: List[str]) -> Dict[str, Any]:
-    """Top-200 nós por grau de saída + arestas entre eles (para visualização no frontend)."""
     top200 = sorted(all_nodes, key=lambda nd: len(graph.adjacency_list.get(nd, [])), reverse=True)[:200]
     top200_set = set(top200)
 
@@ -139,10 +125,70 @@ def _build_graph_sample(graph: Graph, all_nodes: List[str]) -> Dict[str, Any]:
     return {"nodes": sample_nodes, "edges": sample_edges}
 
 
+def _compute_dataset_analytics(graph: Graph, all_nodes: List[str]) -> Dict[str, Any]:
+    genre_counts: Dict[str, int] = {}
+    for nd in all_nodes:
+        genre = graph.nodes[nd].region
+        genre_counts[genre] = genre_counts.get(genre, 0) + 1
+
+    all_weights = [
+        edge.weight
+        for nd in all_nodes
+        for edge in graph.adjacency_list.get(nd, [])
+    ]
+    n_bins = 20
+    bin_size = 1.0 / n_bins
+    weight_hist = [0] * n_bins
+    for w in all_weights:
+        idx = min(int(w / bin_size), n_bins - 1)
+        weight_hist[idx] += 1
+    edge_weight_hist = [
+        {"bin_start": round(i * bin_size, 2), "bin_end": round((i + 1) * bin_size, 2), "count": weight_hist[i]}
+        for i in range(n_bins)
+    ]
+
+    in_degree: Dict[str, int] = {nd: 0 for nd in all_nodes}
+    out_degree: Dict[str, int] = {}
+    for nd in all_nodes:
+        edges = graph.adjacency_list.get(nd, [])
+        out_degree[nd] = len(edges)
+        for edge in edges:
+            if edge.target in in_degree:
+                in_degree[edge.target] += 1
+    total_degree = {nd: out_degree.get(nd, 0) + in_degree.get(nd, 0) for nd in all_nodes}
+    top_hubs = sorted(all_nodes, key=lambda nd: -total_degree[nd])[:10]
+    top_hubs_data = [
+        {
+            "id": nd,
+            "label": graph.nodes[nd].city[:40],
+            "genre": graph.nodes[nd].region,
+            "degree": total_degree[nd],
+            "out_degree": out_degree.get(nd, 0),
+        }
+        for nd in top_hubs
+    ]
+
+    cross = sum(
+        1
+        for nd in all_nodes
+        for edge in graph.adjacency_list.get(nd, [])
+        if graph.nodes[nd].region != graph.nodes.get(edge.target, graph.nodes[nd]).region
+    )
+    total_edges = len(all_weights)
+
+    return {
+        "genre_counts": genre_counts,
+        "edge_weight_hist": edge_weight_hist,
+        "edge_weight_mean": round(sum(all_weights) / max(len(all_weights), 1), 4),
+        "edge_weight_near_pct": round(100.0 * sum(1 for w in all_weights if w < 0.2) / max(len(all_weights), 1), 1),
+        "top_hubs": top_hubs_data,
+        "cross_genre_pct": round(100.0 * cross / max(total_edges, 1), 1),
+    }
+
+
 def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
     os.makedirs(out_dir, exist_ok=True)
 
-    # ── Carregamento ──────────────────────────────────────────────────
     print("Carregando grafo Spotify (Parte 2)...")
     graph = load_spotify_graph(dataset_dir)
     all_nodes = list(graph.nodes.keys())
@@ -154,7 +200,6 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
 
     sources = _pick_sources(graph)
 
-    # ── BFS ──────────────────────────────────────────────────────────
     print("BFS...")
     bfs_results: List[Dict[str, Any]] = []
     for src in sources:
@@ -177,7 +222,6 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             "time_ms": round(elapsed, 3),
         })
 
-    # ── DFS ──────────────────────────────────────────────────────────
     print("DFS...")
     dfs_results: List[Dict[str, Any]] = []
     for src in sources:
@@ -195,7 +239,6 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             "time_ms": round(elapsed, 3),
         })
 
-    # ── DIJKSTRA (5 pares) ────────────────────────────────────────────
     print("Dijkstra...")
     top50 = sorted(all_nodes, key=lambda nd: len(graph.adjacency_list.get(nd, [])), reverse=True)[:50]
     random.seed(42)
@@ -226,23 +269,18 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             "time_ms": round(elapsed, 3),
         })
 
-    # ── BELLMAN-FORD: Caso 1 (pesos negativos, sem ciclo negativo) ────
     print("Bellman-Ford (caso 1: pesos negativos sem ciclo)...")
     try:
         mood_graph = load_mood_graph(dataset_dir)
         mood_nodes = list(mood_graph.nodes.keys())
 
         if mood_nodes:
-            # No DAG mood graph, nós com maior grau de SAÍDA são melhores fontes
-            # (têm mais vizinhos à frente). Nós com maior grau de ENTRADA são melhores alvos.
             out_deg = {nd: len(mood_graph.adjacency_list.get(nd, [])) for nd in mood_nodes}
             in_deg: Dict[str, int] = {nd: 0 for nd in mood_nodes}
             for nd in mood_nodes:
                 for edge in mood_graph.adjacency_list.get(nd, []):
                     in_deg[edge.target] = in_deg.get(edge.target, 0) + 1
 
-            # Source = maior grau de saída (mais caminhos à frente)
-            # Target = maior grau de entrada diferente do source
             bf1_src = max(mood_nodes, key=lambda nd: out_deg[nd])
             candidates = sorted(mood_nodes, key=lambda nd: in_deg[nd], reverse=True)
             bf1_tgt = next(nd for nd in candidates if nd != bf1_src)
@@ -252,7 +290,6 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             elapsed = (time.perf_counter() - t0) * 1000
 
             cost1 = bf1_dist.get(bf1_tgt, float("inf"))
-            # Se o par escolhido não for alcançável (raro num DAG denso), busca o mais próximo
             if cost1 == float("inf"):
                 reachable = [nd for nd, d in bf1_dist.items() if d != float("inf") and nd != bf1_src]
                 if reachable:
@@ -290,14 +327,12 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
     except Exception as exc:
         bf_case1 = {"error": str(exc)}
 
-    # ── BELLMAN-FORD: Caso 2 (ciclo negativo) ─────────────────────────
     print("Bellman-Ford (caso 2: ciclo negativo)...")
     synth = _make_negative_cycle_graph()
     t0 = time.perf_counter()
     _, _, synth_has_cycle, synth_cycle = bellman_ford(synth, "S0")
     elapsed = (time.perf_counter() - t0) * 1000
 
-    # Soma dos pesos do ciclo reportado (deve ser negativa)
     cycle_weight = 0.0
     for u, v in zip(synth_cycle, synth_cycle[1:]):
         edge = synth.get_edge(u, v)
@@ -321,11 +356,9 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
         ),
     }
 
-    # ── Experimento de escala: Ordem do grafo × Tempo de execução ─────
     print("Experimento de escala (Ordem × Tempo)...")
     scaling = _run_scaling_experiment(graph, all_nodes)
 
-    # ── Memória de pico por algoritmo (tracemalloc, execução separada) ─
     print("Medindo memória de pico...")
     mem_src = sources[0]
     memory_kb = {
@@ -335,11 +368,9 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
         "bellman_ford": round(_measure_peak_memory(lambda: bellman_ford(graph, mem_src)), 1),
     }
 
-    # ── Resumo de desempenho ───────────────────────────────────────────
     avg_bfs = sum(r["time_ms"] for r in bfs_results) / max(len(bfs_results), 1)
     avg_dfs = sum(r["time_ms"] for r in dfs_results) / max(len(dfs_results), 1)
     avg_dijk = sum(r["time_ms"] for r in dijkstra_results) / max(len(dijkstra_results), 1)
-    # Filtra tempos ausentes (caso 1 pode ter falhado) para não contaminar a média
     bf_times = [t for t in (bf_case1.get("time_ms"), bf_case2["time_ms"]) if t]
     avg_bf = sum(bf_times) / max(len(bf_times), 1)
 
@@ -400,6 +431,7 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             ),
         },
         "graph_sample": _build_graph_sample(graph, all_nodes),
+        "dataset_analytics": _compute_dataset_analytics(graph, all_nodes),
     }
 
     out_path = os.path.join(out_dir, "parte2_report.json")

@@ -99,6 +99,8 @@ Desktop.ini
 # --- Misc ---
 *.bak
 RELATORIO_RASCUNHO.md
+frontend/tsconfig.tsbuildinfo
+.claude/
 
 # Parte 2 — dataset bruto do Spotify (grande demais para commitar)
 data/dataset_parte2/spotify_tracks.csv

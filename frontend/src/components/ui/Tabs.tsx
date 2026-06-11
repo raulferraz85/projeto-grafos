@@ -1,5 +1,4 @@
-// Controle de abas segmentado, padrão único de navegação interna do projeto.
-// Substitui os 4 estilos divergentes (btn/btn-primary, border-b-2, TabBar etc.).
+
 
 export interface TabItem<T extends string> {
   id: T;

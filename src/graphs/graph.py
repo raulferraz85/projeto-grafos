@@ -22,13 +22,11 @@ class Graph:
         self.directed = directed
 
     def add_node(self, node: Node):
-        """Adiciona um nó ao grafo se ele ainda não existir."""
         if node.iata not in self.nodes:
             self.nodes[node.iata] = node
             self.adjacency_list[node.iata] = []
 
     def add_edge(self, source: str, target: str, connection_type: str, justification: str, weight: float):
-        """Adiciona uma aresta entre dois nós. Se o grafo for não-direcionado, adiciona a aresta reversa."""
         if source not in self.nodes or target not in self.nodes:
             return
 
@@ -40,13 +38,11 @@ class Graph:
             self.adjacency_list[target].append(reverse_edge)
 
     def get_neighbors(self, iata: str) -> List[str]:
-        """Retorna a lista de IATAs dos vizinhos de um nó."""
         if iata not in self.adjacency_list:
             return []
         return [edge.target for edge in self.adjacency_list[iata]]
 
     def get_edge(self, source: str, target: str) -> Optional[Edge]:
-        """Retorna o objeto Edge entre dois nós, se existir."""
         if source not in self.adjacency_list:
             return None
         for edge in self.adjacency_list[source]:
@@ -55,16 +51,13 @@ class Graph:
         return None
 
     def get_order(self) -> int:
-        """Retorna a ordem do grafo (número de nós)."""
         return len(self.nodes)
 
     def get_size(self) -> int:
-        """Retorna o tamanho do grafo (número de arestas)."""
         count = sum(len(edges) for edges in self.adjacency_list.values())
         return count if self.directed else count // 2
 
     def get_density(self) -> float:
-        """Calcula a densidade do grafo."""
         order = self.get_order()
         if order < 2:
             return 0.0

@@ -1,4 +1,3 @@
-"""Visualizações da Parte 2 (dataset Spotify)."""
 
 from __future__ import annotations
 
@@ -14,6 +13,7 @@ import matplotlib.patches as mpatches
 import seaborn as sns
 
 from ..graphs.graph import Graph
+from ..lib.chart_style import ALGO_COLORS, apply_chart_style
 
 GENRE_COLORS = [
     "#38bdf8", "#f97316", "#a78bfa", "#22c55e", "#facc15",
@@ -21,25 +21,11 @@ GENRE_COLORS = [
     "#fbbf24", "#86efac", "#67e8f9", "#c4b5fd", "#fca5a5",
 ]
 
-ALGO_COLORS = {
-    "BFS": "#38bdf8",
-    "DFS": "#a78bfa",
-    "Dijkstra": "#22c55e",
-    "Bellman-Ford": "#f97316",
-}
-
 SOURCE_LABELS = ["Hub (maior grau)", "Mediano", "Periférico (menor grau)"]
 
 
 def _apply_style():
-    sns.set_theme(style="whitegrid", palette="muted")
-    plt.rcParams.update({
-        "figure.facecolor": "white",
-        "axes.facecolor": "white",
-        "font.size": 10,
-        "axes.titlesize": 11,
-        "axes.labelsize": 10,
-    })
+    apply_chart_style(titlesize=11, labelsize=10)
 
 
 def generate_parte2_visualizations(graph: Graph, report: Dict[str, Any], out_dir: str):
@@ -82,9 +68,6 @@ def _plot_degree_distribution(graph: Graph, report: Dict[str, Any], out_dir: str
 
 
 def _plot_algo_comparison(report: Dict[str, Any], out_dir: str):
-    # Comparação justa: todos os algoritmos medidos no MESMO grafo (última linha
-    # do experimento de escala). Médias do performance_summary misturam grafos
-    # diferentes (Bellman-Ford roda no grafo mood) e enganariam o leitor.
     scaling = report.get("scaling_experiment", [])
     algos = ["BFS", "DFS", "Dijkstra", "Bellman-Ford"]
     if scaling:
@@ -139,7 +122,6 @@ def _plot_algo_comparison(report: Dict[str, Any], out_dir: str):
 
 
 def _plot_scaling_scatter(report: Dict[str, Any], out_dir: str):
-    """Dispersão Ordem do Grafo × Tempo de Execução (cores consistentes por algoritmo)."""
     scaling = report.get("scaling_experiment", [])
     if not scaling:
         return
@@ -159,8 +141,6 @@ def _plot_scaling_scatter(report: Dict[str, Any], out_dir: str):
                    marker=marker, s=70, edgecolors="#334155", linewidths=0.6, zorder=3)
         ax.plot(orders, times, color=ALGO_COLORS[name], linewidth=1.2, alpha=0.55, zorder=2)
 
-    # Escala log no eixo Y: Bellman-Ford é ordens de magnitude mais lento;
-    # em escala linear os demais algoritmos ficariam ilegíveis no eixo.
     ax.set_yscale("log")
     ax.set_xlabel("Ordem do grafo (número de vértices do subgrafo induzido)")
     ax.set_ylabel("Tempo de execução (ms, escala log)")
@@ -229,7 +209,6 @@ def _plot_genre_distribution(graph: Graph, out_dir: str):
 
 
 def _write_interpretations(report: Dict[str, Any], out_dir: str):
-    """Interpretação escrita de cada visualização da Parte 2 (exigência AVD)."""
     ds = report.get("dataset", {})
     perf = report.get("performance_summary", {})
     scaling = report.get("scaling_experiment", [])
@@ -293,7 +272,6 @@ um booleano, permite auditar a causa.
 
 
 def _build_sample_graph_html(graph: Graph, out_dir: str):
-    """Gera HTML interativo vis.js com 200 nós mais conectados."""
     sorted_nodes = sorted(
         graph.nodes.keys(),
         key=lambda n: len(graph.adjacency_list.get(n, [])),

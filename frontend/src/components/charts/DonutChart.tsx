@@ -1,7 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { CHART_SERIES } from "../../lib/theme";
+import { ChartTooltip } from "./ChartTooltip";
 
-// Gráfico de rosca reutilizável (composição/proporção de categorias).
 
 export interface DonutDatum {
   label: string;
@@ -12,7 +12,7 @@ export interface DonutDatum {
 interface Props {
   data: DonutDatum[];
   valueFormatter?: (v: number) => string;
-  /** Texto exibido no centro (ex.: total). */
+
   centerLabel?: string;
   centerValue?: string;
   height?: number;
@@ -36,12 +36,12 @@ function DonutTooltip({
   const d = payload[0].payload as DonutDatum;
   const pct = total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs shadow-md">
+    <ChartTooltip>
       <p className="font-semibold text-neutral-800">{d.label}</p>
       <p className="mt-0.5 font-mono text-neutral-700">
         <span className="font-bold">{valueFormatter(d.value)}</span> ({pct}%)
       </p>
-    </div>
+    </ChartTooltip>
   );
 }
 

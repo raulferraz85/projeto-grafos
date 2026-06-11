@@ -9,9 +9,8 @@ import {
   YAxis,
 } from "recharts";
 import { CHART_ACCENT, CHART_MEAN, CHART_PRIMARY } from "../../lib/theme";
+import { ChartTooltip } from "./ChartTooltip";
 
-// Histograma reutilizável: recebe valores brutos, divide em faixas (bins) e
-// renderiza barras verticais com linha de média. Destaca a barra de pico.
 
 interface Props {
   values: number[];
@@ -20,7 +19,7 @@ interface Props {
   color?: string;
   height?: number;
   meanLine?: boolean;
-  /** Rótulo do eixo X (grandeza medida). */
+
   xLabel?: string;
   emptyMessage?: string;
 }
@@ -46,14 +45,14 @@ function HistTooltip({
   if (!active || !payload || payload.length === 0) return null;
   const b = payload[0].payload as Bucket;
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs shadow-md">
+    <ChartTooltip>
       <p className="font-semibold text-neutral-800">
         {valueFormatter(b.start)} – {valueFormatter(b.end)}
       </p>
       <p className="mt-0.5 font-mono text-neutral-700">
         <span className="font-bold">{fmtInt(b.count)}</span> nós
       </p>
-    </div>
+    </ChartTooltip>
   );
 }
 
@@ -79,7 +78,7 @@ export function Histogram({
   const max = Math.max(...values);
   const mean = values.reduce((s, v) => s + v, 0) / values.length;
 
-  // Caso degenerado: todos os valores iguais → uma única faixa.
+
   const span = max - min || 1;
   const n = max === min ? 1 : bins;
   const width = span / n;

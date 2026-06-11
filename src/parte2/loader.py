@@ -1,15 +1,31 @@
-"""Carrega o grafo Spotify (Parte 2) a partir dos CSVs gerados por generate_parte2.py."""
 
 from __future__ import annotations
 
 import csv
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..graphs.graph import Graph, Node
 
 
-def load_spotify_graph(dataset_dir: str) -> Graph:
-    """Carrega nodes.csv e edges.csv e retorna um grafo dirigido."""
+@dataclass
+class MusicNode:
+    track_id: str
+    label: str
+    genre: str
+
+
+def _row_to_music_node(row: dict[str, str]) -> MusicNode:
+    name = row.get("track_name", "")[:40]
+    artist = row.get("artists", "")[:25]
+    return MusicNode(
+        track_id=row["track_id"],
+        label=f"{name} — {artist}".strip(" —"),
+        genre=row.get("track_genre", "other"),
+    )
+
+
+def load_spotify_graph(dataset_dir: str | Path) -> Graph:
     d = Path(dataset_dir)
     nodes_path = d / "nodes.csv"
     edges_path = d / "edges.csv"
@@ -25,12 +41,8 @@ def load_spotify_graph(dataset_dir: str) -> Graph:
     with nodes_path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            track_id = row["track_id"]
-            name = row.get("track_name", "")[:40]
-            artist = row.get("artists", "")[:25]
-            genre = row.get("track_genre", "other")
-            label = f"{name} — {artist}".strip(" —")
-            graph.add_node(Node(iata=track_id, city=label, region=genre))
+            mn = _row_to_music_node(row)
+            graph.add_node(Node(iata=mn.track_id, city=mn.label, region=mn.genre))
 
     with edges_path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -46,8 +58,7 @@ def load_spotify_graph(dataset_dir: str) -> Graph:
     return graph
 
 
-def load_mood_graph(dataset_dir: str) -> Graph:
-    """Carrega nodes.csv e edges_mood.csv e retorna um grafo dirigido (DAG)."""
+def load_mood_graph(dataset_dir: str | Path) -> Graph:
     d = Path(dataset_dir)
     nodes_path = d / "nodes.csv"
     mood_path = d / "edges_mood.csv"
@@ -63,12 +74,8 @@ def load_mood_graph(dataset_dir: str) -> Graph:
     with nodes_path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            track_id = row["track_id"]
-            name = row.get("track_name", "")[:40]
-            artist = row.get("artists", "")[:25]
-            genre = row.get("track_genre", "other")
-            label = f"{name} — {artist}".strip(" —")
-            graph.add_node(Node(iata=track_id, city=label, region=genre))
+            mn = _row_to_music_node(row)
+            graph.add_node(Node(iata=mn.track_id, city=mn.label, region=mn.genre))
 
     with mood_path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)

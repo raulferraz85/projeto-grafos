@@ -9,37 +9,35 @@ import {
   YAxis,
 } from "recharts";
 import { CHART_MEAN, CHART_PRIMARY } from "../../lib/theme";
+import { ChartTooltip } from "./ChartTooltip";
 
-// Gráfico de barras reutilizável (descritivo e dinâmico) baseado em Recharts.
-// Suporta barras horizontais (rankings) e verticais (histogramas), cor por
-// barra, linha de referência (média) e tooltip estilizado.
 
 export interface BarDatum {
   label: string;
   value: number;
   color?: string;
-  /** Texto auxiliar exibido no tooltip. */
+
   sublabel?: string;
 }
 
 interface Props {
   data: BarDatum[];
-  /** "horizontal" = barras deitadas (categorias no eixo Y). "vertical" = barras em pé. */
+
   orientation?: "horizontal" | "vertical";
   valueFormatter?: (v: number) => string;
-  /** Desenha uma linha de referência na média dos valores. */
+
   meanLine?: boolean;
   meanLabel?: string;
   color?: string;
   height?: number;
-  /** Rótulo do valor no tooltip (ex.: "grau", "rotas"). */
+
   valueName?: string;
   emptyMessage?: string;
 }
 
 const fmtDefault = (v: number) => new Intl.NumberFormat("pt-BR").format(v);
 
-function ChartTooltip({
+function BarChartTooltip({
   active,
   payload,
   valueFormatter,
@@ -53,14 +51,14 @@ function ChartTooltip({
   if (!active || !payload || payload.length === 0) return null;
   const d = payload[0].payload as BarDatum;
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs shadow-md">
+    <ChartTooltip>
       <p className="font-semibold text-neutral-800">{d.label}</p>
       {d.sublabel && <p className="text-neutral-500">{d.sublabel}</p>}
       <p className="mt-0.5 font-mono text-neutral-700">
         {valueName ? `${valueName}: ` : ""}
         <span className="font-bold">{valueFormatter(d.value)}</span>
       </p>
-    </div>
+    </ChartTooltip>
   );
 }
 
@@ -138,7 +136,7 @@ export function BarChart({
         <Tooltip
           cursor={{ fill: "rgba(148,163,184,0.12)" }}
           content={
-            <ChartTooltip valueFormatter={valueFormatter} valueName={valueName} />
+            <BarChartTooltip valueFormatter={valueFormatter} valueName={valueName} />
           }
         />
 

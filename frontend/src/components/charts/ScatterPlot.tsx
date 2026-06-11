@@ -10,8 +10,8 @@ import {
   ZAxis,
 } from "recharts";
 import { CHART_PRIMARY } from "../../lib/theme";
+import { ChartTooltip } from "./ChartTooltip";
 
-// Gráfico de dispersão reutilizável (correlação entre duas métricas).
 
 export interface ScatterPoint {
   x: number;
@@ -52,12 +52,12 @@ function ScatterTooltip({
   if (!active || !payload || payload.length === 0) return null;
   const p = payload[0].payload as ScatterPoint;
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs shadow-md">
+    <ChartTooltip>
       <p className="font-semibold text-neutral-800">{p.label}</p>
       {p.sublabel && <p className="text-neutral-500">{p.sublabel}</p>}
       <p className="mt-0.5 font-mono text-neutral-700">{xLabel}: {xFormatter(p.x)}</p>
       <p className="font-mono text-neutral-700">{yLabel}: {yFormatter(p.y)}</p>
-    </div>
+    </ChartTooltip>
   );
 }
 

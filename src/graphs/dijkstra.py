@@ -1,4 +1,3 @@
-"""Algoritmo de Dijkstra — implementação própria com fila de prioridade (heapq)."""
 
 import heapq
 from typing import Dict, Optional, Tuple
@@ -7,11 +6,6 @@ from .graph import Graph
 
 
 def dijkstra(graph: Graph, start_node: str, end_node: Optional[str] = None) -> Tuple[Dict[str, float], Dict[str, str]]:
-    """
-    Algoritmo de Dijkstra para caminhos mínimos com pesos não negativos.
-    heapq é usado apenas como fila de prioridade; a lógica do algoritmo é própria.
-    Retorna distâncias e predecessores.
-    """
     if start_node not in graph.nodes:
         return {}, {}
 
@@ -24,7 +18,6 @@ def dijkstra(graph: Graph, start_node: str, end_node: Optional[str] = None) -> T
     while pq:
         current_dist, u = heapq.heappop(pq)
 
-        # Entrada obsoleta no heap: já existe caminho melhor até u
         if current_dist > distances[u]:
             continue
 

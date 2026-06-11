@@ -62,7 +62,6 @@ export interface Stats {
   routeCount: number;
 }
 
-// ── Parte 2 — Rede Musical Spotify ───────────────────────────────
 
 export interface Parte2Dataset {
   name: string;
@@ -124,7 +123,7 @@ export interface BellmanFordCase {
   pct_negative?: number;
   time_ms: number;
   description?: string;
-  // negative cycle case
+
   graph_nodes?: number;
   graph_edges_directed?: { from: string; to: string; weight: number }[];
   negative_cycle_detected?: boolean;
@@ -156,6 +155,29 @@ export interface MusicGraphSample {
   edges: MusicGraphEdge[];
 }
 
+export interface EdgeWeightBin {
+  bin_start: number;
+  bin_end: number;
+  count: number;
+}
+
+export interface HubNode {
+  id: string;
+  label: string;
+  genre: string;
+  degree: number;
+  out_degree: number;
+}
+
+export interface Parte2DatasetAnalytics {
+  genre_counts: Record<string, number>;
+  edge_weight_hist: EdgeWeightBin[];
+  edge_weight_mean: number;
+  edge_weight_near_pct: number;
+  top_hubs: HubNode[];
+  cross_genre_pct: number;
+}
+
 export interface Parte2Data {
   dataset: Parte2Dataset;
   bfs_results: BfsResult[];
@@ -167,9 +189,9 @@ export interface Parte2Data {
   };
   performance_summary: Parte2Performance;
   graph_sample?: MusicGraphSample;
+  dataset_analytics?: Parte2DatasetAnalytics;
 }
 
-// ── AppData ───────────────────────────────────────────────────────
 
 export interface AppData {
   generatedAt: string;

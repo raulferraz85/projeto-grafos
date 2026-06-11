@@ -1,4 +1,4 @@
-/** Valor exibido quando não há dado disponível. */
+
 export const EM_DASH = "—";
 
 export const formatNumber = (n: number, digits = 0) =>
@@ -10,7 +10,7 @@ export const formatNumber = (n: number, digits = 0) =>
 export const formatPercent = (value: number, digits = 1) =>
   `${formatNumber(value * 100, digits)}%`;
 
-/** Número formatado ou travessão se inválido/ausente. */
+
 export const formatMetric = (n: number | undefined | null, digits = 0) => {
   if (n == null || Number.isNaN(n)) return EM_DASH;
   return formatNumber(n, digits);
@@ -34,5 +34,3 @@ export const formatDateTime = (iso: string) => {
     return EM_DASH;
   }
 };
-
-// As cores por região/categoria foram unificadas em lib/theme.ts (fonte única).

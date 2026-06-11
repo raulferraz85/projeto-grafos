@@ -1,43 +1,79 @@
 import { useMemo } from "react";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { AppData } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
 import { EM_DASH, formatNumber, formatPercentMetric } from "../lib/format";
 import { colorForRegion, EDGE_COLORS } from "../lib/theme";
+import { CONNECTION_TYPE_LABELS } from "../lib/constants";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlaneUp, faLocationDot, faLink } from "@fortawesome/free-solid-svg-icons";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
 import { ChartCard } from "../components/charts/ChartCard";
 import { DonutChart, type DonutDatum } from "../components/charts/DonutChart";
 import { BarChart, type BarDatum } from "../components/charts/BarChart";
 
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="card">
+      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+
+function InsightChip({
+  icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: IconDefinition;
+  label: string;
+  value: string;
+  sub: string;
+}) {
+  return (
+    <div className="card flex items-start gap-3">
+      <FontAwesomeIcon icon={icon} className="text-lg text-neutral-400 mt-0.5 shrink-0" />
+      <div className="min-w-0">
+        <p className="text-xs text-neutral-500">{label}</p>
+        <p className="mt-0.5 font-mono font-semibold">{value}</p>
+        <p className="text-xs text-neutral-500">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
+
 interface Props {
   data: AppData;
   dataStatus: DataStatus;
 }
 
+
 export function OverviewPage({ data, dataStatus }: Props) {
   const { global, regions, stats, rankings } = data;
   const live = dataStatus === "live";
 
-  const fmt = (n: number, pct = false) =>
+  const formatMetric = (n: number, pct = false) =>
     live || n > 0
       ? pct ? formatPercentMetric(n, 2) : formatNumber(n)
       : EM_DASH;
 
-  // Região com maior densidade
+
   const topRegion = live && regions.length > 0
     ? [...regions].sort((a, b) => b.density - a.density)[0]
     : null;
 
-  const TYPE_LABEL: Record<string, string> = {
-    hub_nacional:  "Hub nacional",
-    hub_regional:  "Hub regional",
-    regional:      "Voo regional",
-  };
+  const TYPE_LABEL = CONNECTION_TYPE_LABELS;
 
-  // Densidade máxima regional (para escalar as barras)
+
   const maxDensity = Math.max(...regions.map((r) => r.density), 0.001);
 
-  // ── Dados dos gráficos analíticos ─────────────────────────────────────────
+
   const connectionDonut: DonutDatum[] = useMemo(
     () =>
       stats.connectionTypes.map((t) => ({
@@ -45,7 +81,7 @@ export function OverviewPage({ data, dataStatus }: Props) {
         value: t.count,
         color: EDGE_COLORS[t.type] ?? "#94a3b8",
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [stats.connectionTypes],
   );
 
@@ -69,33 +105,33 @@ export function OverviewPage({ data, dataStatus }: Props) {
         description="Métricas globais da malha aérea e distribuição por região."
       />
 
-      {/* Metric cards */}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Ordem"     value={fmt(global.order)} />
-        <StatCard label="Tamanho"   value={fmt(global.size)} />
-        <StatCard label="Densidade" value={fmt(global.density, true)} />
-        <StatCard label="Pares testados" value={fmt(stats.routeCount)} />
+        <StatCard label="Ordem"     value={formatMetric(global.order)} />
+        <StatCard label="Tamanho"   value={formatMetric(global.size)} />
+        <StatCard label="Densidade" value={formatMetric(global.density, true)} />
+        <StatCard label="Pares testados" value={formatMetric(stats.routeCount)} />
       </div>
 
-      {/* Insight chips */}
+
       {live && (
         <div className="grid gap-3 sm:grid-cols-3">
           <InsightChip
-            icon="✈"
+            icon={faPlaneUp}
             label="Hub mais conectado"
             value={rankings.mostConnected.iata}
             sub={`grau ${rankings.mostConnected.value}`}
           />
           {topRegion && (
             <InsightChip
-              icon="📍"
+              icon={faLocationDot}
               label="Região mais densa"
               value={topRegion.region}
               sub={formatPercentMetric(topRegion.density, 1)}
             />
           )}
           <InsightChip
-            icon="🔗"
+            icon={faLink}
             label="Tipo de conexão dominante"
             value={TYPE_LABEL["hub_regional"] ?? "Hub regional"}
             sub={`${stats.connectionTypes.find((t) => t.type === "hub_regional")?.count ?? 0} arestas`}
@@ -103,14 +139,14 @@ export function OverviewPage({ data, dataStatus }: Props) {
         </div>
       )}
 
-      {/* Regional table */}
+
       <div>
         <h3 className="text-base font-bold text-neutral-800">Métricas por região</h3>
         <p className="mt-0.5 mb-3 text-sm text-neutral-600">
           Ordem (nº de aeroportos), tamanho (nº de arestas) e densidade de cada sub-rede regional.
           A barra mostra a densidade relativa à região mais densa. Total:{" "}
-          {fmt(stats.airportCount)} aeroportos · {fmt(stats.edgeCount)} conexões ·{" "}
-          {fmt(stats.regionCount)} regiões.
+          {formatMetric(stats.airportCount)} aeroportos · {formatMetric(stats.edgeCount)} conexões ·{" "}
+          {formatMetric(stats.regionCount)} regiões.
         </p>
 
         <div className="table-wrap">
@@ -156,7 +192,7 @@ export function OverviewPage({ data, dataStatus }: Props) {
         </div>
       </div>
 
-      {/* ── Gráficos analíticos ──────────────────────────────────────────── */}
+
       {live && (
         <section className="grid gap-4 lg:grid-cols-2">
           <ChartCard
@@ -186,38 +222,6 @@ export function OverviewPage({ data, dataStatus }: Props) {
           )}
         </section>
       )}
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="card">
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function InsightChip({
-  icon,
-  label,
-  value,
-  sub,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  sub: string;
-}) {
-  return (
-    <div className="card flex items-start gap-3">
-      <span className="text-xl leading-none">{icon}</span>
-      <div className="min-w-0">
-        <p className="text-xs text-neutral-500">{label}</p>
-        <p className="mt-0.5 font-mono font-semibold">{value}</p>
-        <p className="text-xs text-neutral-500">{sub}</p>
-      </div>
     </div>
   );
 }

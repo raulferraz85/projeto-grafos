@@ -1,95 +1,61 @@
+
 import { useEffect, useMemo, useRef, useState } from "react";
+
+
 import type { AppData, Airport } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
+
+
 import { formatNumber } from "../lib/format";
 import { REGION_COLORS, EDGE_COLORS } from "../lib/theme";
-import { AirportSearch } from "../components/AirportSearch";
 import { runDijkstra, formatDuration } from "../lib/dijkstra";
+import { CONNECTION_TYPE_LABELS } from "../lib/constants";
+
+
+import { AirportSearch } from "../components/AirportSearch";
 import { ChartCard } from "../components/charts/ChartCard";
 import { Histogram } from "../components/charts/Histogram";
 import { DonutChart, type DonutDatum } from "../components/charts/DonutChart";
+
+
+import { useVisNetwork } from "../hooks/useVisNetwork";
 
 interface Props {
   data: AppData;
   dataStatus: DataStatus;
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  hub_nacional: "Hub nacional",
-  hub_regional: "Hub regional",
-  regional:     "Voo regional",
-};
-
-const VIS_SCRIPT =
-  "https://unpkg.com/vis-network@9.1.2/standalone/umd/vis-network.min.js";
-const VIS_CSS =
-  "https://unpkg.com/vis-network@9.1.2/styles/vis-network.min.css";
-
-function visAvailable(): boolean {
-  const vis = (window as any).vis;
-  return !!(vis?.DataSet && vis?.Network);
-}
-
-// Carrega um script externo uma única vez e resolve quando vis estiver no window
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const finish = () => {
-      if (visAvailable()) resolve();
-      else reject(new Error(`Script loaded but window.vis is missing: ${src}`));
-    };
-
-    const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
-    if (existing) {
-      if (visAvailable()) {
-        resolve();
-        return;
-      }
-      existing.addEventListener("load", finish, { once: true });
-      existing.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
-      return;
-    }
-
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = finish;
-    s.onerror = () => reject(new Error(`Failed to load ${src}`));
-    document.head.appendChild(s);
-  });
-}
-function loadCss(href: string) {
-  if (document.querySelector(`link[href="${href}"]`)) return;
-  const l = document.createElement("link");
-  l.rel = "stylesheet"; l.href = href;
-  document.head.appendChild(l);
-}
+const TYPE_LABEL = CONNECTION_TYPE_LABELS;
 
 type SideTab = "route" | "airport";
 
 interface RouteResult { path: string[]; cost: number }
 
 export function GraphPage({ data, dataStatus }: Props) {
-  const live = dataStatus === "live";
+  const isLive = dataStatus === "live";
   const { airports, edges } = data;
 
-  // ── vis.js refs ────────────────────────────────────────────────
+
   const containerRef = useRef<HTMLDivElement>(null);
   const networkRef   = useRef<any>(null);
   const nodesRef     = useRef<any>(null);
   const edgesRef     = useRef<any>(null);
   const origColors   = useRef<Record<string, string>>({});
 
-  const [visReady, setVisReady]   = useState(visAvailable);
-  const [search, setSearch]       = useState("");
-  const [activeBtn, setActiveBtn] = useState<string | null>(null);
 
-  // ── UI state ───────────────────────────────────────────────────
+  const { visReady } = useVisNetwork();
+
+
+  const [search, setSearch]           = useState("");
+  const [activeBtn, setActiveBtn]     = useState<string | null>(null);
   const [sideTab, setSideTab]         = useState<SideTab>("route");
   const [routeOrigin, setRouteOrigin] = useState(airports[0]?.iata ?? "");
   const [routeDest,   setRouteDest]   = useState(airports[1]?.iata ?? "");
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
-  const [searched,    setSearched]    = useState(false);
+  const [isSearched,  setIsSearched]  = useState(false);
   const [activeRoute, setActiveRoute] = useState<string | null>(null);
   const [selectedAirport, setSelectedAirport] = useState<Airport | null>(null);
+
 
   const airportByIata = useMemo(
     () => Object.fromEntries(airports.map((a) => [a.iata, a])),
@@ -98,12 +64,12 @@ export function GraphPage({ data, dataStatus }: Props) {
   const allIatas = useMemo(() => airports.map((a) => a.iata), [airports]);
 
   const edgeLookupId = useMemo(() => {
-    const m: Record<string, string> = {};
+    const lookup: Record<string, string> = {};
     for (const e of edges) {
-      m[`${e.source}|${e.target}`] = `${e.source}-${e.target}`;
-      m[`${e.target}|${e.source}`] = `${e.source}-${e.target}`;
+      lookup[`${e.source}|${e.target}`] = `${e.source}-${e.target}`;
+      lookup[`${e.target}|${e.source}`] = `${e.source}-${e.target}`;
     }
-    return m;
+    return lookup;
   }, [edges]);
 
   const mandatory = useMemo(() => {
@@ -120,7 +86,6 @@ export function GraphPage({ data, dataStatus }: Props) {
     return result;
   }, [data.routes]);
 
-  // ── Dados dos gráficos-resumo da rede ─────────────────────────────────────
   const degreeValues = useMemo(() => airports.map((a) => a.degree), [airports]);
   const connectionDonut: DonutDatum[] = useMemo(
     () =>
@@ -135,19 +100,7 @@ export function GraphPage({ data, dataStatus }: Props) {
     ? airports.reduce((s, a) => s + a.degree, 0) / airports.length
     : 0;
 
-  // 1. Carrega vis-network (standalone UMD expõe window.vis.DataSet e .Network)
-  useEffect(() => {
-    if (visAvailable()) {
-      setVisReady(true);
-      return;
-    }
-    loadCss(VIS_CSS);
-    loadScript(VIS_SCRIPT)
-      .then(() => setVisReady(true))
-      .catch((err) => console.error("vis-network:", err));
-  }, []);
 
-  // ── Init network ───────────────────────────────────────────────
   useEffect(() => {
     if (!visReady || !containerRef.current || airports.length === 0) return;
     const vis = (window as any).vis;
@@ -193,7 +146,7 @@ export function GraphPage({ data, dataStatus }: Props) {
       },
     );
 
-    // Click on node → show airport info in side panel
+
     networkRef.current.on("click", (params: any) => {
       if (params.nodes.length > 0) {
         const iata = params.nodes[0] as string;
@@ -205,7 +158,7 @@ export function GraphPage({ data, dataStatus }: Props) {
     return () => { networkRef.current?.destroy(); networkRef.current = null; };
   }, [visReady, airports, edges, airportByIata]);
 
-  // ── Helpers ────────────────────────────────────────────────────
+
   function dimAll() {
     nodesRef.current?.update(
       airports.map((a) => ({ id: a.iata, color: { background: "#e2e8f0", border: "#cbd5e1" }, opacity: 0.15 })),
@@ -244,19 +197,19 @@ export function GraphPage({ data, dataStatus }: Props) {
     networkRef.current?.fit({ nodes: path, animation: { duration: 700, easingFunction: "easeInOutCubic" } });
   }
 
+
   function handleReset() {
     setRouteResult(null);
-    setSearched(false);
+    setIsSearched(false);
     setActiveRoute(null);
     setSelectedAirport(null);
     resetColors();
   }
 
-  // ── Route search ───────────────────────────────────────────────
   function handleCalculate() {
     const result = runDijkstra(edges, allIatas, routeOrigin, routeDest);
     setRouteResult(result);
-    setSearched(true);
+    setIsSearched(true);
     setActiveRoute(null);
     if (result) highlightPath(result.path, "#8b5cf6");
   }
@@ -265,15 +218,16 @@ export function GraphPage({ data, dataStatus }: Props) {
     const m = mandatory[key];
     if (!m || m.path.length === 0) return;
     setActiveRoute(key);
-    setSearched(false);
+    setIsSearched(false);
     setRouteResult(null);
     highlightPath(m.path, m.color);
   }
 
+
   return (
     <div className="flex flex-col gap-3">
 
-      {/* ── Compact header: title + legend in one row ─────────── */}
+
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
         <div>
           <h2 className="text-lg font-semibold text-neutral-900">Grafo</h2>
@@ -297,7 +251,7 @@ export function GraphPage({ data, dataStatus }: Props) {
         </div>
       </div>
 
-      {!live ? (
+      {!isLive ? (
         <div className="card flex h-[560px] items-center justify-center text-sm text-neutral-500">
           Execute <code className="mx-1 rounded bg-neutral-100 px-1 text-xs">make pipeline</code> para carregar o grafo.
         </div>
@@ -305,16 +259,16 @@ export function GraphPage({ data, dataStatus }: Props) {
         <>
         <div className="flex gap-4" style={{ height: 560 }}>
 
-          {/* ── Network ────────────────────────────────────────── */}
+
           <div
             ref={containerRef}
             className="min-h-0 flex-1 overflow-hidden rounded-lg border border-neutral-200 bg-white"
           />
 
-          {/* ── Side panel ─────────────────────────────────────── */}
+
           <div className="flex min-h-0 w-72 flex-shrink-0 flex-col rounded-lg border border-neutral-200 bg-white">
 
-            {/* Tab bar */}
+
             <div className="flex border-b border-neutral-100">
               {([["route", "Rota"], ["airport", "Aeroporto"]] as [SideTab, string][]).map(([id, label]) => (
                 <button
@@ -333,11 +287,11 @@ export function GraphPage({ data, dataStatus }: Props) {
 
             <div className="flex-1 overflow-y-auto p-3">
 
-              {/* ── ROUTE TAB ─────────────────────────────────── */}
+
               {sideTab === "route" && (
                 <div className="flex flex-col gap-3">
 
-                  {/* Mandatory quick access */}
+
                   <div>
                     <p className="mb-1.5 text-xs font-medium text-neutral-400">Rotas obrigatórias</p>
                     <div className="flex flex-col gap-1.5">
@@ -358,14 +312,14 @@ export function GraphPage({ data, dataStatus }: Props) {
 
                   <div className="border-t border-neutral-100" />
 
-                  {/* Dynamic search */}
+
                   <div>
                     <p className="mb-1.5 text-xs font-medium text-neutral-400">Pesquisar qualquer rota</p>
                     <div className="flex flex-col gap-2">
                       <AirportSearch airports={airports} value={routeOrigin} label="Origem"
-                        onChange={(v) => { setRouteOrigin(v); setSearched(false); }} exclude={routeDest} />
+                        onChange={(v) => { setRouteOrigin(v); setIsSearched(false); }} exclude={routeDest} />
                       <AirportSearch airports={airports} value={routeDest} label="Destino"
-                        onChange={(v) => { setRouteDest(v); setSearched(false); }} exclude={routeOrigin} />
+                        onChange={(v) => { setRouteDest(v); setIsSearched(false); }} exclude={routeOrigin} />
                       <button
                         onClick={handleCalculate}
                         disabled={routeOrigin === routeDest}
@@ -376,8 +330,8 @@ export function GraphPage({ data, dataStatus }: Props) {
                     </div>
                   </div>
 
-                  {/* Result */}
-                  {searched && (
+
+                  {isSearched && (
                     <div className="border-t border-neutral-100 pt-3">
                       {routeResult ? (
                         <div className="space-y-3">
@@ -394,13 +348,13 @@ export function GraphPage({ data, dataStatus }: Props) {
                     </div>
                   )}
 
-                  {(searched || activeRoute) && (
+                  {(isSearched || activeRoute) && (
                     <button onClick={handleReset} className="btn w-full text-xs">↺ Limpar destaque</button>
                   )}
                 </div>
               )}
 
-              {/* ── AIRPORT TAB ───────────────────────────────── */}
+
               {sideTab === "airport" && (
                 <div className="flex flex-col gap-3">
                   {selectedAirport ? (
@@ -465,7 +419,7 @@ export function GraphPage({ data, dataStatus }: Props) {
           </div>
         </div>
 
-        {/* ── Resumo analítico da rede ─────────────────────────── */}
+
         <section className="space-y-4 pt-2">
           <div>
             <h3 className="text-base font-bold text-neutral-800">Resumo analítico da rede</h3>
@@ -504,7 +458,7 @@ export function GraphPage({ data, dataStatus }: Props) {
   );
 }
 
-// ── MiniPath ──────────────────────────────────────────────────────────────────
+
 function MiniPath({ path, cityFor }: { path: string[]; cityFor: (i: string) => string }) {
   return (
     <div className="overflow-x-auto">
@@ -538,7 +492,7 @@ function MiniPath({ path, cityFor }: { path: string[]; cityFor: (i: string) => s
   );
 }
 
-// ── Chip ──────────────────────────────────────────────────────────────────────
+
 function Chip({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-neutral-100 bg-neutral-50 px-2 py-1.5 text-center">

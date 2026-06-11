@@ -1,14 +1,20 @@
+
 import { useMemo, useState } from "react";
+
 import type { Airport, RankItem, Rankings } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
+
 import { EM_DASH, formatMetric, formatPercentMetric } from "../lib/format";
 import { colorForRegion, REGION_COLORS } from "../lib/theme";
+import { MAX_DEGREE } from "../lib/constants";
+
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
 import { Tabs } from "../components/ui/Tabs";
 import { StatCard, type Accent } from "../components/ui/Card";
 import { ChartCard, LegendDot } from "../components/charts/ChartCard";
 import { BarChart, type BarDatum } from "../components/charts/BarChart";
+
 
 interface Props {
   rankings: Rankings;
@@ -17,6 +23,7 @@ interface Props {
 }
 
 type Tab = "connected" | "density" | "ego";
+
 
 const TABS = [
   { id: "connected" as const, label: "Mais conectados" },
@@ -30,15 +37,14 @@ const TAB_ACCENT: Record<Tab, Accent> = {
   ego:       "violet",
 };
 
-const MAX_DEGREE = 43; // grau máximo do grafo (BEL)
 
 export function RankingsPage({ rankings, airports, dataStatus }: Props) {
-  const [tab, setTab]           = useState<Tab>("connected");
+
+  const [tab, setTab]             = useState<Tab>("connected");
   const [minDegree, setMinDegree] = useState(0);
   const empty = dataStatus !== "live";
 
-  // Recomputa o ranking dinamicamente a partir da lista completa de aeroportos.
-  // O filtro de grau mínimo só se aplica na aba "density".
+
   const items: RankItem[] = useMemo(() => {
     if (empty) return [];
 
@@ -72,8 +78,7 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
 
   const visibleCount = empty ? 0 : airports.filter((a) => a.degree >= minDegree).length;
 
-  // Dados do gráfico — barras horizontais coloridas por região.
-  // Recharts posiciona o primeiro item no topo, então mantemos a ordem do ranking (#1 no topo).
+
   const chartData: BarDatum[] = useMemo(
     () =>
       items.map((it) => ({
@@ -85,7 +90,7 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
     [items],
   );
 
-  // Regiões realmente presentes no top-10 atual (para a legenda do gráfico).
+
   const chartRegions = useMemo(
     () => Array.from(new Set(items.map((i) => i.region).filter(Boolean))),
     [items],
@@ -96,9 +101,11 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
     density:   { label: "maior densidade", unit: (v: number) => formatPercentMetric(v, 1), valueName: "densidade", chartFmt: (v: number) => formatPercentMetric(v, 1) },
     ego:       { label: "maior ego-rede",  unit: (v: number) => `${formatMetric(v)} nós`,  valueName: "tamanho ego", chartFmt: (v: number) => formatMetric(v) },
   } as const;
-  const card1 = items[0] ?? null;
-  const card2 = items[1] ?? null;
+
+  const card1  = items[0] ?? null;
+  const card2  = items[1] ?? null;
   const accent = TAB_ACCENT[tab];
+
 
   return (
     <div className="space-y-6">
@@ -107,7 +114,7 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
         description="Aeroportos com maior grau, densidade da ego-rede e tamanho da ego-rede."
       />
 
-      {/* Highlight cards — sempre no formato da aba ativa */}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <StatCard
           accent={accent}
@@ -123,10 +130,10 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
         />
       </div>
 
-      {/* Tabs (filtro de categoria) */}
+
       <Tabs items={TABS} active={tab} onChange={setTab} />
 
-      {/* Degree threshold filter — só aparece na aba de densidade */}
+
       {tab === "density" && <div className="rounded-xl border-2 border-neutral-200 bg-neutral-50 px-4 py-3">
         <div className="mb-2 flex items-center justify-between">
           <label className="text-sm font-medium text-neutral-700">
@@ -162,7 +169,7 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
         )}
       </div>}
 
-      {/* Table */}
+
       <div className="table-wrap">
         <table className="data-table">
           <thead>
@@ -204,7 +211,7 @@ export function RankingsPage({ rankings, airports, dataStatus }: Props) {
         </table>
       </div>
 
-      {/* Gráfico descritivo e dinâmico — reage à aba e ao slider */}
+
       <ChartCard
         title={`Top ${items.length || 10} — ${TAB_META[tab].label}`}
         description={

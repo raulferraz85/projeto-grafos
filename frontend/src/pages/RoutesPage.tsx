@@ -1,24 +1,93 @@
+
 import { useMemo, useState } from "react";
+
 import type { AppData, Route } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
+
 import { EM_DASH, formatNumber } from "../lib/format";
+import { formatDuration } from "../lib/dijkstra";
+import { MANDATORY_ROUTES } from "../lib/constants";
+
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
-import { formatDuration } from "../lib/dijkstra";
 import { ChartCard } from "../components/charts/ChartCard";
 import { Histogram } from "../components/charts/Histogram";
 import { BarChart, type BarDatum } from "../components/charts/BarChart";
+
 
 interface Props {
   data: AppData;
   dataStatus: DataStatus;
 }
 
-const MANDATORY = new Set(["REC-POA", "MAO-GRU"]);
+
+const MANDATORY = MANDATORY_ROUTES;
 
 function routeKey(r: Route) {
   return `${r.origin}-${r.destination}`;
 }
+
+
+function PathGraph({
+  path, cityFor, edgeLookup,
+}: {
+  path: string[];
+  cityFor: (i: string) => string;
+  edgeLookup: Record<string, number>;
+}) {
+  return (
+    <div className="overflow-x-auto pb-2">
+      <div className="flex min-w-max items-center">
+        {path.map((iata, i) => {
+          const isFirst = i === 0;
+          const isLast  = i === path.length - 1;
+          const weight  = i < path.length - 1 ? edgeLookup[`${iata}-${path[i + 1]}`] : undefined;
+          return (
+            <div key={`${iata}-${i}`} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div className={`flex h-14 w-14 items-center justify-center rounded-full font-mono text-sm font-bold text-white shadow-sm ${
+                  isFirst ? "bg-blue-500" : isLast ? "bg-orange-500" : "bg-neutral-500"
+                }`}>
+                  {iata}
+                </div>
+                <span className="mt-1 max-w-[72px] text-center text-xs leading-tight text-neutral-500">
+                  {cityFor(iata)}
+                </span>
+              </div>
+              {!isLast && (
+                <div className="mx-2 flex min-w-[80px] flex-col items-center">
+                  <span className="mb-1 text-xs text-neutral-400">
+                    {weight !== undefined ? formatDuration(weight) : ""}
+                  </span>
+                  <div className="flex w-full items-center">
+                    <div className="h-px flex-1 bg-neutral-300" />
+                    <span className="text-xs text-neutral-300">▶</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex gap-4 text-xs text-neutral-500">
+        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" />Origem</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-neutral-500" />Escala</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />Destino</span>
+      </div>
+    </div>
+  );
+}
+
+
+function Chip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-center">
+      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="font-mono text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
 
 export function RoutesPage({ data, dataStatus }: Props) {
   const { routes, airports } = data;
@@ -58,11 +127,11 @@ export function RoutesPage({ data, dataStatus }: Props) {
           cityFor(r.destination).toLowerCase().includes(q)
         );
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [routes, filter, airportByIata],
   );
 
-  // ── Dados dos gráficos (reagem ao filtro de busca) ────────────────────────
+
   const reachable = useMemo(() => filtered.filter((r) => r.reachable), [filtered]);
   const durationValues = useMemo(() => reachable.map((r) => r.cost), [reachable]);
   const hopsBars: BarDatum[] = useMemo(() => {
@@ -81,7 +150,7 @@ export function RoutesPage({ data, dataStatus }: Props) {
         description="Caminhos mínimos pré-calculados com Dijkstra. Para pesquisar qualquer par, use a aba Grafo."
       />
 
-      {/* Detail card */}
+
       {selected && live && (
         <div className="card space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-2">
@@ -115,7 +184,7 @@ export function RoutesPage({ data, dataStatus }: Props) {
         </div>
       )}
 
-      {/* Search filter */}
+
       <input
         className="input"
         placeholder="Filtrar por IATA ou cidade…"
@@ -124,7 +193,7 @@ export function RoutesPage({ data, dataStatus }: Props) {
         disabled={!live}
       />
 
-      {/* Table */}
+
       <div className="table-wrap">
         <table className="data-table">
           <thead>
@@ -179,7 +248,7 @@ export function RoutesPage({ data, dataStatus }: Props) {
         </table>
       </div>
 
-      {/* ── Análise visual das rotas filtradas ───────────────────────────── */}
+
       {live && (
         <section className="space-y-4 pt-2">
           <div>
@@ -222,67 +291,6 @@ export function RoutesPage({ data, dataStatus }: Props) {
       <p className="text-xs text-neutral-400">
         ✦ Rotas obrigatórias do enunciado · Para pesquisar qualquer par dinamicamente, use a aba <strong>Grafo</strong>.
       </p>
-    </div>
-  );
-}
-
-// ── PathGraph ─────────────────────────────────────────────────────────────────
-function PathGraph({
-  path, cityFor, edgeLookup,
-}: {
-  path: string[];
-  cityFor: (i: string) => string;
-  edgeLookup: Record<string, number>;
-}) {
-  return (
-    <div className="overflow-x-auto pb-2">
-      <div className="flex min-w-max items-center">
-        {path.map((iata, i) => {
-          const isFirst = i === 0;
-          const isLast  = i === path.length - 1;
-          const weight  = i < path.length - 1 ? edgeLookup[`${iata}-${path[i + 1]}`] : undefined;
-          return (
-            <div key={`${iata}-${i}`} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-full font-mono text-sm font-bold text-white shadow-sm ${
-                  isFirst ? "bg-blue-500" : isLast ? "bg-orange-500" : "bg-neutral-500"
-                }`}>
-                  {iata}
-                </div>
-                <span className="mt-1 max-w-[72px] text-center text-xs leading-tight text-neutral-500">
-                  {cityFor(iata)}
-                </span>
-              </div>
-              {!isLast && (
-                <div className="mx-2 flex min-w-[80px] flex-col items-center">
-                  <span className="mb-1 text-xs text-neutral-400">
-                    {weight !== undefined ? formatDuration(weight) : ""}
-                  </span>
-                  <div className="flex w-full items-center">
-                    <div className="h-px flex-1 bg-neutral-300" />
-                    <span className="text-xs text-neutral-300">▶</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-4 flex gap-4 text-xs text-neutral-500">
-        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" />Origem</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-neutral-500" />Escala</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />Destino</span>
-      </div>
-    </div>
-  );
-}
-
-// ── Chip ──────────────────────────────────────────────────────────────────────
-function Chip({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-center">
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="font-mono text-sm font-semibold">{value}</p>
     </div>
   );
 }

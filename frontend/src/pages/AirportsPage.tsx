@@ -1,14 +1,19 @@
 import { useMemo, useState } from "react";
+
 import type { Airport } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
+
 import { EM_DASH, formatPercentMetric } from "../lib/format";
 import { colorForRegion, REGION_COLORS } from "../lib/theme";
+import { HUB_DEGREE_THRESHOLD } from "../lib/constants";
+
 import { PageHeader } from "../components/PageHeader";
 import { EmptyTableRow } from "../components/EmptyTableRow";
 import { ChartCard, LegendDot } from "../components/charts/ChartCard";
 import { Histogram } from "../components/charts/Histogram";
 import { ScatterPlot, type ScatterPoint } from "../components/charts/ScatterPlot";
 import { DonutChart, type DonutDatum } from "../components/charts/DonutChart";
+
 
 interface Props {
   airports: Airport[];
@@ -17,10 +22,40 @@ interface Props {
 
 type SortKey = "iata" | "city" | "degree" | "egoDensity" | "egoSize" | "egoOrder";
 
-const HUB_THRESHOLD = 20;
+
+const HUB_THRESHOLD = HUB_DEGREE_THRESHOLD;
+
+
+interface SortThProps {
+  label: string;
+  k: SortKey;
+  sortKey: SortKey;
+  sortDesc: boolean;
+  onSort: (k: SortKey) => void;
+  onToggle: () => void;
+}
+
+function SortTh({ label, k, sortKey, sortDesc, onSort, onToggle }: SortThProps) {
+  const active = sortKey === k;
+  return (
+    <th
+      className="cursor-pointer select-none hover:text-neutral-900"
+      onClick={() => { if (active) onToggle(); else onSort(k); }}
+    >
+      <span className="flex items-center gap-1">
+        {label}
+        <span className={`text-[10px] ${active ? "text-neutral-700" : "text-neutral-300"}`}>
+          {active ? (sortDesc ? "↓" : "↑") : "↕"}
+        </span>
+      </span>
+    </th>
+  );
+}
+
 
 export function AirportsPage({ airports, dataStatus }: Props) {
   const live = dataStatus === "live";
+
 
   const regions = useMemo(
     () => Array.from(new Set(airports.map((a) => a.region).filter(Boolean))).sort(),
@@ -29,12 +64,14 @@ export function AirportsPage({ airports, dataStatus }: Props) {
   const maxDegree  = useMemo(() => Math.max(...airports.map((a) => a.degree), 1), [airports]);
   const maxDensity = useMemo(() => Math.max(...airports.map((a) => a.egoDensity), 0.001), [airports]);
 
-  const [query,      setQuery]      = useState("");
-  const [region,     setRegion]     = useState("all");
-  const [minDegree,  setMinDegree]  = useState(0);
-  const [sortKey,    setSortKey]    = useState<SortKey>("degree");
-  const [sortDesc,   setSortDesc]   = useState(true);
+
+  const [query,        setQuery]        = useState("");
+  const [region,       setRegion]       = useState("all");
+  const [minDegree,    setMinDegree]    = useState(0);
+  const [sortKey,      setSortKey]      = useState<SortKey>("degree");
+  const [sortDesc,     setSortDesc]     = useState(true);
   const [expandedIata, setExpandedIata] = useState<string | null>(null);
+
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -63,7 +100,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
   const avgDegree  = filtered.length > 0 ? filtered.reduce((s, a) => s + a.degree, 0)     / filtered.length : 0;
   const avgDensity = filtered.length > 0 ? filtered.reduce((s, a) => s + a.egoDensity, 0) / filtered.length : 0;
 
-  // ── Dados dos gráficos analíticos (reagem aos filtros ativos) ──────────────
+
   const degreeValues = useMemo(() => filtered.map((a) => a.degree), [filtered]);
 
   const scatterPoints: ScatterPoint[] = useMemo(
@@ -79,12 +116,13 @@ export function AirportsPage({ airports, dataStatus }: Props) {
   );
 
   const regionDonut: DonutDatum[] = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const a of filtered) if (a.region) m[a.region] = (m[a.region] ?? 0) + 1;
-    return Object.entries(m)
+    const counts: Record<string, number> = {};
+    for (const a of filtered) if (a.region) counts[a.region] = (counts[a.region] ?? 0) + 1;
+    return Object.entries(counts)
       .sort((x, y) => y[1] - x[1])
       .map(([region, count]) => ({ label: region, value: count, color: colorForRegion(region) }));
   }, [filtered]);
+
 
   function toggleRow(iata: string) {
     setExpandedIata((prev) => (prev === iata ? null : iata));
@@ -95,28 +133,12 @@ export function AirportsPage({ airports, dataStatus }: Props) {
     setExpandedIata(iata);
   }
 
-  function SortTh({ label, k }: { label: string; k: SortKey }) {
-    const active = sortKey === k;
-    return (
-      <th
-        className="cursor-pointer select-none hover:text-neutral-900"
-        onClick={() => { if (active) setSortDesc((d) => !d); else { setSortKey(k); setSortDesc(true); } }}
-      >
-        <span className="flex items-center gap-1">
-          {label}
-          <span className={`text-[10px] ${active ? "text-neutral-700" : "text-neutral-300"}`}>
-            {active ? (sortDesc ? "↓" : "↑") : "↕"}
-          </span>
-        </span>
-      </th>
-    );
-  }
 
   return (
     <div className="space-y-4">
       <PageHeader title="Aeroportos" description="Lista completa com métricas de grau e ego-rede. Clique numa linha para ver os vizinhos." />
 
-      {/* Filters */}
+
       <div className="flex flex-wrap gap-2">
         <input
           className="input min-w-[200px] flex-1"
@@ -138,7 +160,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
         </select>
       </div>
 
-      {/* Degree slider */}
+
       <div className="flex items-center gap-3 text-sm text-neutral-600">
         <span className="whitespace-nowrap">Grau mínimo:</span>
         <span className="w-6 font-mono font-semibold text-neutral-900">{minDegree}</span>
@@ -151,7 +173,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
         <span className="whitespace-nowrap text-xs text-neutral-400">{maxDegree} máx</span>
       </div>
 
-      {/* Summary */}
+
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500">
         <span className="font-medium text-neutral-700">
           {airports.length === 0 ? EM_DASH : filtered.length} aeroportos
@@ -165,18 +187,18 @@ export function AirportsPage({ airports, dataStatus }: Props) {
         )}
       </div>
 
-      {/* Table */}
+
       <div className="table-wrap">
         <table className="data-table">
           <thead>
             <tr>
-              <SortTh label="IATA"         k="iata" />
-              <SortTh label="Cidade"       k="city" />
+              <SortTh label="IATA"          k="iata"       sortKey={sortKey} sortDesc={sortDesc} onSort={setSortKey} onToggle={() => setSortDesc((d) => !d)} />
+              <SortTh label="Cidade"        k="city"       sortKey={sortKey} sortDesc={sortDesc} onSort={setSortKey} onToggle={() => setSortDesc((d) => !d)} />
               <th>Região</th>
-              <SortTh label="Grau"         k="degree" />
-              <SortTh label="Ordem ego"    k="egoOrder" />
-              <SortTh label="Tamanho ego"  k="egoSize" />
-              <SortTh label="Densidade ego" k="egoDensity" />
+              <SortTh label="Grau"          k="degree"     sortKey={sortKey} sortDesc={sortDesc} onSort={setSortKey} onToggle={() => setSortDesc((d) => !d)} />
+              <SortTh label="Ordem ego"     k="egoOrder"   sortKey={sortKey} sortDesc={sortDesc} onSort={setSortKey} onToggle={() => setSortDesc((d) => !d)} />
+              <SortTh label="Tamanho ego"   k="egoSize"    sortKey={sortKey} sortDesc={sortDesc} onSort={setSortKey} onToggle={() => setSortDesc((d) => !d)} />
+              <SortTh label="Densidade ego" k="egoDensity" sortKey={sortKey} sortDesc={sortDesc} onSort={setSortKey} onToggle={() => setSortDesc((d) => !d)} />
             </tr>
           </thead>
           <tbody>
@@ -199,7 +221,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
                     onClick={() => toggleRow(a.iata)}
                     className={`cursor-pointer transition-colors ${isExpanded ? "bg-neutral-50" : "hover:bg-neutral-50"}`}
                   >
-                    {/* IATA + hub badge */}
+
                     <td>
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono font-semibold">{a.iata}</span>
@@ -211,7 +233,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
 
                     <td className="text-neutral-700">{a.city || EM_DASH}</td>
 
-                    {/* Região + dot */}
+
                     <td>
                       <span className="flex items-center gap-1.5">
                         <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full" style={{ background: regionColor }} />
@@ -219,7 +241,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
                       </span>
                     </td>
 
-                    {/* Grau + mini-bar */}
+
                     <td>
                       <div className="flex items-center gap-2">
                         <span className="w-7 font-mono text-sm">{a.degree}</span>
@@ -235,7 +257,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
                     <td className="font-mono text-sm">{ego ? EM_DASH : a.egoOrder}</td>
                     <td className="font-mono text-sm">{ego ? EM_DASH : a.egoSize}</td>
 
-                    {/* Densidade ego + mini-bar */}
+
                     <td>
                       {ego ? EM_DASH : (
                         <div className="flex items-center gap-2">
@@ -251,7 +273,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
                     </td>
                   </tr>,
 
-                  /* Expanded neighbors row */
+
                   isExpanded && (
                     <tr key={`${a.iata}-detail`} className="bg-neutral-50">
                       <td colSpan={7} className="px-4 py-3">
@@ -285,7 +307,7 @@ export function AirportsPage({ airports, dataStatus }: Props) {
         </table>
       </div>
 
-      {/* ── Análise visual do conjunto filtrado ──────────────────────────── */}
+
       <section className="space-y-4 pt-2">
         <div>
           <h3 className="text-base font-bold text-neutral-800">Análise do conjunto filtrado</h3>

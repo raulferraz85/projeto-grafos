@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-// Moldura padrão para qualquer gráfico analítico do projeto.
-// Garante título + descrição + legenda consistentes sob cada visualização.
 
 interface Props {
   title: string;
@@ -24,7 +22,7 @@ export function ChartCard({ title, description, legend, children, className }: P
   );
 }
 
-/** Item de legenda reutilizável (bolinha colorida + rótulo). */
+
 export function LegendDot({ color, children }: { color: string; children: ReactNode }) {
   return (
     <span className="flex items-center gap-1.5">

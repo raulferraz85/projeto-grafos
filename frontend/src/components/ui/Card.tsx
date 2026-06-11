@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-// Cartões padronizados no estilo vibrante (rounded-xl + acento de cor).
-// Base única para toda a aplicação.
 
 export type Accent = "sky" | "emerald" | "violet" | "orange" | "rose" | "slate";
 

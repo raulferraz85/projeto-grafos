@@ -34,7 +34,7 @@ export function AirportSearch({ airports, value, onChange, label, exclude, place
 
   const selected = airports.find((a) => a.iata === value);
 
-  // Debounce + filter
+
   useEffect(() => {
     if (query.length < 2) { setSuggestions([]); return; }
     const t = setTimeout(() => {
@@ -67,7 +67,7 @@ export function AirportSearch({ airports, value, onChange, label, exclude, place
   }
 
   function handleBlur() {
-    // Delay so mousedown on a suggestion fires first
+
     setTimeout(() => { setOpen(false); setQuery(""); }, 160);
   }
 
@@ -99,14 +99,14 @@ export function AirportSearch({ airports, value, onChange, label, exclude, place
             onBlur={handleBlur}
             onKeyDown={handleKey}
           />
-          {/* Clear / chevron icon */}
+
           <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">
             {open ? "▲" : "▼"}
           </span>
         </div>
       </label>
 
-      {/* Dropdown */}
+
       {open && (
         <ul className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg">
           {suggestions.length === 0 ? (

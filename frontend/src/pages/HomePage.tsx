@@ -1,7 +1,11 @@
+
 import type { AppData } from "../types";
 import type { DataStatus } from "../lib/placeholderData";
 import type { Page } from "../components/Layout";
+
+
 import { formatNumber } from "../lib/format";
+
 
 interface Props {
   data: AppData;
@@ -53,13 +57,13 @@ export function HomePage({ data, dataStatus, onNavigate }: Props) {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2">
             <StatMini label="Aeroportos" value={live ? formatNumber(data.stats.airportCount) : "128"} />
             <StatMini label="Conexões" value={live ? formatNumber(data.stats.edgeCount) : "426"} />
             <StatMini label="Regiões" value={live ? formatNumber(data.stats.regionCount) : "5"} />
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {["BFS", "DFS", "Dijkstra", "Bellman-Ford", "Grafo interativo"].map((tag) => (
               <span
                 key={tag}
@@ -96,13 +100,13 @@ export function HomePage({ data, dataStatus, onNavigate }: Props) {
           </div>
 
           {has2 && data.parte2 ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2">
               <StatMini label="Músicas (nós)" value={formatNumber(data.parte2.dataset.nodes)} />
               <StatMini label="Conexões" value={formatNumber(data.parte2.dataset.edges)} />
               <StatMini label="Grau médio" value={formatNumber(data.parte2.dataset.degree_mean, 1)} />
             </div>
           ) : (
-            <div className="space-y-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900">
+            <div className="mt-4 space-y-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900">
               <p className="font-medium">Dataset não processado.</p>
               <ol className="ml-4 list-decimal space-y-0.5">
                 <li>
@@ -125,7 +129,7 @@ export function HomePage({ data, dataStatus, onNavigate }: Props) {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {["BFS", "DFS", "Dijkstra", "Bellman-Ford", "Pesos negativos"].map((tag) => (
               <span
                 key={tag}
@@ -155,6 +159,7 @@ export function HomePage({ data, dataStatus, onNavigate }: Props) {
     </div>
   );
 }
+
 
 function StatMini({ label, value }: { label: string; value: string }) {
   return (

@@ -1,9 +1,10 @@
 import csv
 from typing import List, Tuple
+
 from .graph import Node, Graph
 
+
 def load_airports(file_path: str) -> List[Node]:
-    """Carrega os dados dos aeroportos a partir de um arquivo CSV."""
     airports = []
     with open(file_path, mode='r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
@@ -15,8 +16,8 @@ def load_airports(file_path: str) -> List[Node]:
             ))
     return airports
 
-def load_adjacencies(file_path: str, graph: Graph):
-    """Carrega adjacencias_aeroportos.csv (formato: origem,destino,tipo_conexao,justificativa,peso)."""
+
+def load_adjacencies(file_path: str, graph: Graph) -> None:
     with open(file_path, mode='r', encoding='utf-8', newline='') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -26,8 +27,8 @@ def load_adjacencies(file_path: str, graph: Graph):
                 peso = 1.0
             graph.add_edge(row['origem'], row['destino'], row['tipo_conexao'], row['justificativa'], peso)
 
+
 def load_routes(file_path: str) -> List[Tuple]:
-    """Carrega os pares de rotas para cálculo de distância."""
     routes = []
     with open(file_path, mode='r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)

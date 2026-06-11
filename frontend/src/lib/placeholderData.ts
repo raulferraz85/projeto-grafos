@@ -1,6 +1,6 @@
 import type { AppData } from "../types";
 
-/** Marcador interno — não é uma data real. */
+
 export const PLACEHOLDER_GENERATED_AT = "__placeholder__";
 
 export const PLACEHOLDER_DATA: AppData = {
@@ -43,7 +43,7 @@ export function isValidAppData(raw: unknown): raw is AppData {
   );
 }
 
-/** Métricas de `out/` ainda não foram geradas (só estrutura em `data/`). */
+
 export function isPartialData(data: AppData): boolean {
   const hasMetrics =
     (data.global?.order ?? 0) > 0 ||

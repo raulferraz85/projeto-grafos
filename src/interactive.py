@@ -1,27 +1,8 @@
-"""
-Gerador do grafo interativo (out/grafo_interativo.html).
-
-Obrigatórios (criterios-grafos 1.5 / criterios-avd UX-UI):
-  - Tooltip em nós e arestas (nome, grau, peso)
-  - Busca por código IATA com destaque
-  - Destaque visual dos caminhos mínimos obrigatórios (Dijkstra)
-  - Gestalt: cores por região, espessura ∝ peso, hubs maiores, fundo escuro
-
-Bônus implementados:
-  - Filtro por região (checkboxes) e por grau mínimo (slider)
-  - Painel de métricas em tempo real (ordem/tamanho/densidade com filtros)
-  - Seletor de algoritmo (Dijkstra/BFS/DFS) com destaque do caminho
-  - Camadas BFS coloridas (passo a passo da busca em largura)
-  - Animação de pulso no caminho destacado
-  - Busca preditiva (autocompletar por IATA/cidade)
-  - Legenda dinâmica (contagens atualizam com filtros)
-"""
 
 import json
 import math
 import os
 
-# Paleta única do projeto (mesmas cores em todas as visualizações — Similaridade/Gestalt)
 REGION_COLORS = {
     "Norte":        "#22c55e",
     "Nordeste":     "#f97316",
@@ -740,16 +721,8 @@ _HTML = r"""<!DOCTYPE html>
 
 
 def generate_interactive_graph(graph, ego_data, out_path, mandatory_paths=None):
-    """
-    Gera o grafo interativo. mandatory_paths: {"REC->POA": [nós do caminho], ...}
-    (caminhos mínimos já calculados pelo Dijkstra de src/graphs/dijkstra.py).
-    """
     ego_map = {item["aeroporto"]: item for item in ego_data}
 
-    # ── Posições iniciais por região (Lei da Proximidade — Gestalt) ──
-    # Cada região recebe um centro num círculo; os nós nascem em espiral
-    # determinística ao redor do centro da sua região. A física do layout
-    # parte desse arranjo, então os clusters regionais permanecem agrupados.
     regions_sorted = sorted({n.region for n in graph.nodes.values()})
     region_center = {}
     radius = 650
@@ -758,9 +731,8 @@ def generate_interactive_graph(graph, ego_data, out_path, mandatory_paths=None):
         region_center[reg] = (radius * math.cos(angle), radius * math.sin(angle))
 
     region_counter = {reg: 0 for reg in regions_sorted}
-    golden = math.pi * (3 - math.sqrt(5))  # ângulo áureo: espalha sem sobrepor
+    golden = math.pi * (3 - math.sqrt(5))
 
-    # ── Nós: tamanho ∝ grau (Hierarquia Visual), cor por região (Similaridade)
     nodes = []
     for iata, node in graph.nodes.items():
         info = ego_map.get(iata, {"grau": 0, "densidade_ego": 0.0})
@@ -791,7 +763,6 @@ def generate_interactive_graph(graph, ego_data, out_path, mandatory_paths=None):
             "y":          round(cy + spread * math.sin(j * golden), 1),
         })
 
-    # ── Arestas: espessura ∝ peso (Conectividade/Gestalt) ──────────
     raw_edges = []
     seen = set()
     for u in graph.adjacency_list:
@@ -810,7 +781,6 @@ def generate_interactive_graph(graph, ego_data, out_path, mandatory_paths=None):
     for edge_id, edge in enumerate(raw_edges):
         tipo = edge.connection_type
         col = EDGE_COLORS.get(tipo, "#64748b")
-        # Espessura proporcional ao peso da aresta (0.6 a 3.2 px)
         width = round(0.6 + 2.6 * (edge.weight - w_min) / w_span, 2)
         edges.append({
             "id":            edge_id,
@@ -829,7 +799,6 @@ def generate_interactive_graph(graph, ego_data, out_path, mandatory_paths=None):
             "justification": edge.justification,
         })
 
-    # ── Caminhos obrigatórios com rótulo e custo ───────────────────
     edge_weight = {}
     for e in edges:
         edge_weight[(e["from"], e["to"])] = e["weight"]
