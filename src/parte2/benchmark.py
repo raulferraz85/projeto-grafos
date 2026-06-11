@@ -8,6 +8,7 @@ import json
 import os
 import random
 import time
+import tracemalloc
 from typing import Any, Dict, List
 
 from ..graphs.algorithms import bellman_ford, bfs, dfs, dijkstra, get_path
@@ -39,6 +40,75 @@ def _make_negative_cycle_graph() -> Graph:
     ]:
         g.add_edge(src, tgt, "synthetic", f"peso={w}", w)
     return g
+
+
+def _induced_subgraph(graph: Graph, node_ids: List[str]) -> Graph:
+    """Subgrafo induzido pelos node_ids (mantém apenas arestas internas ao conjunto)."""
+    keep = set(node_ids)
+    sub = Graph(directed=graph.directed)
+    for nid in node_ids:
+        sub.add_node(graph.nodes[nid])
+    for nid in node_ids:
+        for edge in graph.adjacency_list.get(nid, []):
+            if edge.target in keep:
+                sub.add_edge(edge.source, edge.target, edge.connection_type,
+                             edge.justification, edge.weight)
+    return sub
+
+
+def _measure_peak_memory(fn) -> float:
+    """Executa fn() medindo o pico de memória alocada (KB) via tracemalloc."""
+    tracemalloc.start()
+    fn()
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    return peak / 1024.0
+
+
+def _run_scaling_experiment(graph: Graph, all_nodes: List[str]) -> List[Dict[str, Any]]:
+    """
+    Mede como o tempo de cada algoritmo escala com a ordem do grafo
+    (subgrafos induzidos de tamanhos crescentes). Alimenta o gráfico de
+    dispersão Ordem × Tempo de Execução.
+    """
+    if not all_nodes:
+        return []
+    sizes = [s for s in (500, 1000, 1500, 2000, 2500, 3000) if s <= len(all_nodes)]
+    if len(all_nodes) not in sizes:
+        sizes.append(len(all_nodes))
+
+    rows: List[Dict[str, Any]] = []
+    for size in sizes:
+        sub = _induced_subgraph(graph, all_nodes[:size])
+        src = next(iter(sub.nodes))
+
+        t0 = time.perf_counter()
+        bfs(sub, src)
+        t_bfs = (time.perf_counter() - t0) * 1000
+
+        t0 = time.perf_counter()
+        dfs(sub, src)
+        t_dfs = (time.perf_counter() - t0) * 1000
+
+        t0 = time.perf_counter()
+        dijkstra(sub, src)
+        t_dijk = (time.perf_counter() - t0) * 1000
+
+        t0 = time.perf_counter()
+        bellman_ford(sub, src)
+        t_bf = (time.perf_counter() - t0) * 1000
+
+        rows.append({
+            "order": sub.get_order(),
+            "edges": sub.get_size(),
+            "bfs_ms": round(t_bfs, 3),
+            "dfs_ms": round(t_dfs, 3),
+            "dijkstra_ms": round(t_dijk, 3),
+            "bellman_ford_ms": round(t_bf, 3),
+        })
+        print(f"  escala n={size}: BFS {t_bfs:.1f}ms · DFS {t_dfs:.1f}ms · "
+              f"Dijkstra {t_dijk:.1f}ms · Bellman-Ford {t_bf:.1f}ms")
+    return rows
 
 
 def _build_graph_sample(graph: Graph, all_nodes: List[str]) -> Dict[str, Any]:
@@ -178,7 +248,7 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             bf1_tgt = next(nd for nd in candidates if nd != bf1_src)
 
             t0 = time.perf_counter()
-            bf1_dist, bf1_pred, bf1_cycle = bellman_ford(mood_graph, bf1_src)
+            bf1_dist, bf1_pred, bf1_cycle, _ = bellman_ford(mood_graph, bf1_src)
             elapsed = (time.perf_counter() - t0) * 1000
 
             cost1 = bf1_dist.get(bf1_tgt, float("inf"))
@@ -224,8 +294,15 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
     print("Bellman-Ford (caso 2: ciclo negativo)...")
     synth = _make_negative_cycle_graph()
     t0 = time.perf_counter()
-    _, _, synth_cycle = bellman_ford(synth, "S0")
+    _, _, synth_has_cycle, synth_cycle = bellman_ford(synth, "S0")
     elapsed = (time.perf_counter() - t0) * 1000
+
+    # Soma dos pesos do ciclo reportado (deve ser negativa)
+    cycle_weight = 0.0
+    for u, v in zip(synth_cycle, synth_cycle[1:]):
+        edge = synth.get_edge(u, v)
+        if edge:
+            cycle_weight += edge.weight
 
     bf_case2: Dict[str, Any] = {
         "graph_nodes": synth.get_order(),
@@ -234,19 +311,36 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             for u in synth.adjacency_list
             for edge in synth.adjacency_list[u]
         ],
-        "negative_cycle_detected": synth_cycle,
+        "negative_cycle_detected": synth_has_cycle,
+        "negative_cycle_nodes": synth_cycle,
+        "negative_cycle_weight": round(cycle_weight, 3),
         "time_ms": round(elapsed, 3),
         "description": (
             "Grafo sintético: 4 nós, ciclo S1→S2→S3→S1 com soma de pesos = -3.5. "
-            "Bellman-Ford deve detectar negative_cycle_detected = true."
+            "Bellman-Ford detecta e reporta o ciclo em negative_cycle_nodes."
         ),
+    }
+
+    # ── Experimento de escala: Ordem do grafo × Tempo de execução ─────
+    print("Experimento de escala (Ordem × Tempo)...")
+    scaling = _run_scaling_experiment(graph, all_nodes)
+
+    # ── Memória de pico por algoritmo (tracemalloc, execução separada) ─
+    print("Medindo memória de pico...")
+    mem_src = sources[0]
+    memory_kb = {
+        "bfs": round(_measure_peak_memory(lambda: bfs(graph, mem_src)), 1),
+        "dfs": round(_measure_peak_memory(lambda: dfs(graph, mem_src)), 1),
+        "dijkstra": round(_measure_peak_memory(lambda: dijkstra(graph, mem_src)), 1),
+        "bellman_ford": round(_measure_peak_memory(lambda: bellman_ford(graph, mem_src)), 1),
     }
 
     # ── Resumo de desempenho ───────────────────────────────────────────
     avg_bfs = sum(r["time_ms"] for r in bfs_results) / max(len(bfs_results), 1)
     avg_dfs = sum(r["time_ms"] for r in dfs_results) / max(len(dfs_results), 1)
     avg_dijk = sum(r["time_ms"] for r in dijkstra_results) / max(len(dijkstra_results), 1)
-    bf_times = [bf_case1.get("time_ms", 0), bf_case2["time_ms"]]
+    # Filtra tempos ausentes (caso 1 pode ter falhado) para não contaminar a média
+    bf_times = [t for t in (bf_case1.get("time_ms"), bf_case2["time_ms"]) if t]
     avg_bf = sum(bf_times) / max(len(bf_times), 1)
 
     report: Dict[str, Any] = {
@@ -274,6 +368,36 @@ def run_benchmark(dataset_dir: str, out_dir: str) -> Dict[str, Any]:
             "dfs_avg_ms": round(avg_dfs, 3),
             "dijkstra_avg_ms": round(avg_dijk, 3),
             "bellman_ford_avg_ms": round(avg_bf, 3),
+            "peak_memory_kb": memory_kb,
+        },
+        "scaling_experiment": scaling,
+        "analysis": {
+            "comparacao": (
+                f"Comparação justa (mesmo grafo, {scaling[-1]['order']:,} nós e "
+                f"{scaling[-1]['edges']:,} arestas): BFS {scaling[-1]['bfs_ms']:.1f} ms, "
+                f"Dijkstra {scaling[-1]['dijkstra_ms']:.1f} ms, DFS {scaling[-1]['dfs_ms']:.1f} ms "
+                f"e Bellman-Ford {scaling[-1]['bellman_ford_ms']:.1f} ms "
+                f"({scaling[-1]['bellman_ford_ms'] / max(scaling[-1]['bfs_ms'], 0.001):.0f}× a BFS). "
+                "BFS e Dijkstra visitam cada aresta uma vez (o heap adiciona o fator log V); "
+                "o DFS paga o custo extra da classificação de arestas; o Bellman-Ford repete "
+                "passadas completas de relaxamento (O(V·E) no pior caso — aqui a parada "
+                "antecipada limita as passadas ao diâmetro do grafo, e ainda assim ele é o "
+                "mais lento). Sem a parada antecipada, as 2.999 passadas levariam minutos."
+            ),
+            "adequacao": (
+                "BFS: caminhos com menos saltos em grafos não ponderados e análise por camadas. "
+                "DFS: detecção de ciclos e classificação estrutural de arestas. "
+                "Dijkstra: caminho mínimo com pesos não negativos (caso geral mais eficiente). "
+                "Bellman-Ford: único correto com pesos negativos; detecta e reporta ciclos negativos."
+            ),
+            "limites_do_modelo": (
+                "Pesos do grafo principal são distâncias euclidianas em espaço de áudio "
+                "normalizado — sem significado físico absoluto; o k-NN (k=50) impõe grau de "
+                "saída fixo, distorcendo a distribuição de graus natural. No grafo mood "
+                "(valence − energia), o peso negativo modela 'ganho de energia', mas a "
+                "construção em DAG impede ciclos por definição, então o caso de ciclo "
+                "negativo precisa de grafo sintético."
+            ),
         },
         "graph_sample": _build_graph_sample(graph, all_nodes),
     }

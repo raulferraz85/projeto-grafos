@@ -7,10 +7,17 @@ from .graphs.algorithms import bfs, dijkstra, get_path
 
 def calculate_global_metrics(graph: Graph, out_dir: str):
     """Calcula métricas globais do grafo e salva em global.json."""
+    # Conectividade verificada com a própria BFS: o grafo é conectado se uma
+    # varredura a partir de qualquer nó alcança todos os demais.
+    first_node = next(iter(graph.nodes), None)
+    connected = (
+        len(bfs(graph, first_node)) == graph.get_order() if first_node else False
+    )
     metrics = {
         "order": graph.get_order(),
         "size": graph.get_size(),
-        "density": graph.get_density()
+        "density": graph.get_density(),
+        "connected": connected
     }
 
     os.makedirs(out_dir, exist_ok=True)

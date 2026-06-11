@@ -61,9 +61,9 @@ def _run_parte2(dataset_dir: str, out_dir: str, alg: str | None, source: str | N
             if source not in mood_graph.nodes:
                 print(f"Nó '{source}' não encontrado no mood graph.")
                 return
-            distances, predecessors, cycle = bellman_ford(mood_graph, source)
-            if cycle:
-                print("Aviso: ciclo negativo detectado!")
+            distances, predecessors, has_cycle, cycle = bellman_ford(mood_graph, source)
+            if has_cycle:
+                print(f"Aviso: ciclo negativo detectado! Ciclo: {' → '.join(cycle)}")
             if target and target in mood_graph.nodes:
                 cost = distances.get(target, float("inf"))
                 path = get_path(predecessors, target) if cost != float("inf") else []
@@ -118,20 +118,17 @@ def main():
     find_rankings(ego_data)
     route_results = process_routes(graph, routes, args.out)
 
-    # Caminhos obrigatorios (REC->POA e MAO->GRU)
+    # Caminhos obrigatorios: todos os pares de data/rotas.csv (>= 5)
     mandatory_paths = {}
     for res in route_results:
         key = f"{res['origem']}->{res['destino']}"
-        is_mandatory = (
-            (res["origem"] == "REC" and res["destino"] == "POA") or
-            (res["origem"] == "MAO" and res["destino"] == "GRU")
-        )
-        if is_mandatory and res["caminho"] != "N/A":
+        if res["caminho"] != "N/A":
             mandatory_paths[key] = res["caminho"].split(" -> ")
 
     # Visualizations
     print("Generating visualizations...")
-    from .viz import generate_interactive_graph, generate_path_tree, generate_exploratory_plots
+    from .interactive import generate_interactive_graph
+    from .viz import generate_path_tree, generate_exploratory_plots
     generate_interactive_graph(graph, ego_data, os.path.join(args.out, "grafo_interativo.html"), mandatory_paths)
     data_dir = os.path.dirname(args.dataset) or "data"
     generate_exploratory_plots(args.out, data_dir=data_dir)
@@ -165,9 +162,9 @@ def main():
             if not args.source:
                 print("Error: BELLMAN-FORD requires --source")
             else:
-                distances, predecessors, cycle = bellman_ford(graph, args.source)
-                if cycle:
-                    print("Warning: Negative cycle detected!")
+                distances, predecessors, has_cycle, cycle = bellman_ford(graph, args.source)
+                if has_cycle:
+                    print(f"Warning: Negative cycle detected! Cycle: {' -> '.join(cycle)}")
                 if args.target:
                     path = get_path(predecessors, args.target)
                     cost = distances.get(args.target, float('inf'))

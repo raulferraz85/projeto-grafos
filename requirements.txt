@@ -2,5 +2,7 @@ matplotlib
 numpy
 pandas
 pyvis
+pytest
+reportlab
 scipy
 seaborn

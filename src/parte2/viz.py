@@ -48,9 +48,11 @@ def generate_parte2_visualizations(graph: Graph, report: Dict[str, Any], out_dir
 
     _plot_degree_distribution(graph, report, out_dir)
     _plot_algo_comparison(report, out_dir)
+    _plot_scaling_scatter(report, out_dir)
     _plot_bfs_layers(report, out_dir)
     _plot_genre_distribution(graph, out_dir)
     _build_sample_graph_html(graph, out_dir)
+    _write_interpretations(report, out_dir)
 
     print("Visualizações Parte 2 geradas.")
 
@@ -80,10 +82,20 @@ def _plot_degree_distribution(graph: Graph, report: Dict[str, Any], out_dir: str
 
 
 def _plot_algo_comparison(report: Dict[str, Any], out_dir: str):
-    perf = report.get("performance_summary", {})
+    # Comparação justa: todos os algoritmos medidos no MESMO grafo (última linha
+    # do experimento de escala). Médias do performance_summary misturam grafos
+    # diferentes (Bellman-Ford roda no grafo mood) e enganariam o leitor.
+    scaling = report.get("scaling_experiment", [])
     algos = ["BFS", "DFS", "Dijkstra", "Bellman-Ford"]
-    keys = ["bfs_avg_ms", "dfs_avg_ms", "dijkstra_avg_ms", "bellman_ford_avg_ms"]
-    times = [perf.get(k, 0) for k in keys]
+    if scaling:
+        last = scaling[-1]
+        times = [last["bfs_ms"], last["dfs_ms"], last["dijkstra_ms"], last["bellman_ford_ms"]]
+        subtitle = f"mesmo grafo: {last['order']:,} nós · {last['edges']:,} arestas"
+    else:
+        perf = report.get("performance_summary", {})
+        keys = ["bfs_avg_ms", "dfs_avg_ms", "dijkstra_avg_ms", "bellman_ford_avg_ms"]
+        times = [perf.get(k, 0) for k in keys]
+        subtitle = "média por execução no dataset Spotify"
     colors = [ALGO_COLORS[a] for a in algos]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
@@ -92,8 +104,8 @@ def _plot_algo_comparison(report: Dict[str, Any], out_dir: str):
     ax1.bar_label(bars, fmt="%.2f ms", padding=4, fontsize=9)
     max_t = max(times) if max(times) > 0 else 1
     ax1.set_xlim(right=max_t * 1.3)
-    ax1.set_xlabel("Tempo médio (ms)")
-    ax1.set_title("Comparação de Desempenho\n(média por execução no dataset Spotify)")
+    ax1.set_xlabel("Tempo de execução (ms)")
+    ax1.set_title(f"Comparação de Desempenho\n({subtitle})")
 
     complexity_data = [
         ["BFS", "O(V + E)", "O(V)", "Pesos iguais, por camadas"],
@@ -123,6 +135,44 @@ def _plot_algo_comparison(report: Dict[str, Any], out_dir: str):
     fig.suptitle("Análise de Algoritmos de Grafo — Dataset Spotify", fontsize=12, y=1.02)
     plt.tight_layout()
     fig.savefig(os.path.join(out_dir, "parte2_algo_comparison.png"), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _plot_scaling_scatter(report: Dict[str, Any], out_dir: str):
+    """Dispersão Ordem do Grafo × Tempo de Execução (cores consistentes por algoritmo)."""
+    scaling = report.get("scaling_experiment", [])
+    if not scaling:
+        return
+
+    orders = [row["order"] for row in scaling]
+    series = [
+        ("BFS", "bfs_ms", "o"),
+        ("DFS", "dfs_ms", "s"),
+        ("Dijkstra", "dijkstra_ms", "^"),
+        ("Bellman-Ford", "bellman_ford_ms", "D"),
+    ]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for name, key, marker in series:
+        times = [row[key] for row in scaling]
+        ax.scatter(orders, times, label=name, color=ALGO_COLORS[name],
+                   marker=marker, s=70, edgecolors="#334155", linewidths=0.6, zorder=3)
+        ax.plot(orders, times, color=ALGO_COLORS[name], linewidth=1.2, alpha=0.55, zorder=2)
+
+    # Escala log no eixo Y: Bellman-Ford é ordens de magnitude mais lento;
+    # em escala linear os demais algoritmos ficariam ilegíveis no eixo.
+    ax.set_yscale("log")
+    ax.set_xlabel("Ordem do grafo (número de vértices do subgrafo induzido)")
+    ax.set_ylabel("Tempo de execução (ms, escala log)")
+    ax.set_title(
+        "Como o tempo de execução escala com a ordem do grafo?\n"
+        "Subgrafos induzidos do dataset Spotify · 1 execução por ponto · mesma origem",
+        pad=12,
+    )
+    ax.legend(title="Algoritmo", fontsize=10, title_fontsize=10)
+    ax.grid(True, which="both", alpha=0.3)
+    plt.tight_layout()
+    fig.savefig(os.path.join(out_dir, "parte2_ordem_vs_tempo.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -176,6 +226,70 @@ def _plot_genre_distribution(graph: Graph, out_dir: str):
     plt.tight_layout()
     fig.savefig(os.path.join(out_dir, "parte2_genre_dist.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
+
+
+def _write_interpretations(report: Dict[str, Any], out_dir: str):
+    """Interpretação escrita de cada visualização da Parte 2 (exigência AVD)."""
+    ds = report.get("dataset", {})
+    perf = report.get("performance_summary", {})
+    scaling = report.get("scaling_experiment", [])
+    bf2 = report.get("bellman_ford_results", {}).get("negative_cycle_case", {})
+
+    last = scaling[-1] if scaling else {}
+    ratio = (
+        last.get("bellman_ford_ms", 0) / max(last.get("bfs_ms", 1), 0.001)
+        if last else 0
+    )
+
+    md = f"""# Interpretação das Visualizações — Parte 2 (Dataset Spotify)
+
+## parte2_degree_dist.png — Distribuição de graus
+A rede tem {ds.get('nodes', 0):,} músicas e {ds.get('edges', 0):,} conexões k-NN.
+O grau de saída é fixado em k=50 pela construção, mas o grau de ENTRADA varia
+livremente: músicas "centrais" no espaço de áudio (grau total acima da média
+{ds.get('degree_mean', 0)}) são vizinhas de muitas outras — análogo aos hubs da Parte 1.
+**Insight:** mesmo com k fixo, a rede desenvolve concentração: poucas faixas
+muito "típicas" do seu gênero atraem a maioria das conexões.
+
+## parte2_algo_comparison.png — Comparação de desempenho
+Medição no MESMO grafo ({last.get('order', 0):,} nós, {last.get('edges', 0):,} arestas):
+BFS {last.get('bfs_ms', 0):.1f} ms, Dijkstra {last.get('dijkstra_ms', 0):.1f} ms,
+DFS {last.get('dfs_ms', 0):.1f} ms e Bellman-Ford {last.get('bellman_ford_ms', 0):.1f} ms
+(~{ratio:.0f}× a BFS, mesmo com parada antecipada que limita as passadas ao diâmetro;
+sem ela, as 2.999 passadas de O(V·E) levariam minutos). Cores consistentes por
+algoritmo em todos os gráficos (comparabilidade). **Insight:** só vale pagar o custo
+do Bellman-Ford quando há pesos negativos — exatamente o caso do grafo mood.
+
+## parte2_ordem_vs_tempo.png — Dispersão Ordem × Tempo
+Cada ponto é um subgrafo induzido (500 a {last.get('order', 3000):,} vértices).
+Em escala log, BFS/DFS/Dijkstra crescem quase linearmente com a ordem, enquanto o
+Bellman-Ford abre distância — no maior subgrafo ele é ~{ratio:,.0f}× mais lento que a BFS.
+**Insight:** a diferença assintótica O(V·E) vs O(V+E) é visível empiricamente; em
+grafos grandes, escolher o algoritmo errado custa minutos, não milissegundos.
+
+## parte2_bfs_layers.png — Camadas BFS
+A partir de 3 origens distintas (hub, mediana e periférica), quase toda a rede é
+alcançada em 4–6 camadas. **Insight:** a rede musical é um "mundo pequeno" — a
+similaridade encadeada conecta gêneros distantes em poucos saltos.
+
+## parte2_genre_dist.png — Distribuição de gêneros
+A amostra estratificada preserva a diversidade do dataset original (114 gêneros).
+**Insight:** nenhum gênero domina a amostra, evitando viés nas métricas de caminho.
+
+## parte2_grafo_amostra.html — Grafo interativo da amostra
+Top-200 nós por grau, coloridos por gênero (Similaridade — Gestalt), tamanho ∝ grau
+(Hierarquia Visual), fundo escuro (Figura-Fundo). **Insight:** clusters de gêneros
+eletrônicos compartilham fronteiras densas — playlists híbridas são estruturalmente naturais.
+
+## Caso de ciclo negativo (Bellman-Ford)
+No grafo sintético, o algoritmo detectou e reportou o ciclo
+{' → '.join(bf2.get('negative_cycle_nodes', []) or ['—'])} com soma de pesos
+{bf2.get('negative_cycle_weight', 'N/A')}. **Insight:** com ciclo negativo o conceito
+de "caminho mínimo" deixa de existir (custo → −∞); reportar o ciclo, e não apenas
+um booleano, permite auditar a causa.
+"""
+    with open(os.path.join(out_dir, "parte2_analises.md"), "w", encoding="utf-8") as f:
+        f.write(md)
 
 
 def _build_sample_graph_html(graph: Graph, out_dir: str):

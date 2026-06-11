@@ -1,4 +1,4 @@
-.PHONY: dev pipeline parte2 test clean install
+.PHONY: dev pipeline parte2 relatorio test clean install
 
 PYTHON := .venv/bin/python
 VENV   := .venv/bin/activate
@@ -33,6 +33,14 @@ pipeline: $(VENV)
 	fi
 	@echo "==> JSON consolidado → frontend/public/data.json"
 	@$(PYTHON) scripts/build_data.py
+	@echo "==> Relatório técnico → relatorio_tecnico.pdf"
+	@$(PYTHON) scripts/generate_relatorio.py
+
+# ──────────────────────────────────────────────────────────────────
+# relatorio  →  gera apenas o PDF técnico a partir dos outputs em out/
+# ──────────────────────────────────────────────────────────────────
+relatorio: $(VENV)
+	@$(PYTHON) scripts/generate_relatorio.py
 
 # ──────────────────────────────────────────────────────────────────
 # parte2  →  apenas Parte 2 (pré-processa e roda benchmark)

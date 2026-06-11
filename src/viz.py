@@ -31,297 +31,6 @@ _EDGE_LABELS = {
     "regional":      "Voo regional (103)",
 }
 
-_HTML = """\
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rede de Aeroportos do Brasil</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0f172a; color: #e2e8f0;
-      display: flex; height: 100vh; overflow: hidden;
-    }
-    #sidebar {
-      width: 260px; min-width: 260px; background: #1e293b;
-      padding: 16px 14px; display: flex; flex-direction: column; gap: 14px;
-      overflow-y: auto; border-right: 1px solid #334155;
-    }
-    #network-wrap { flex: 1; position: relative; overflow: hidden; }
-    #mynetwork    { width: 100%; height: 100%; }
-    .section-title {
-      font-size: 10px; font-weight: 700; color: #64748b;
-      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
-    }
-    .app-header h1 { font-size: 15px; font-weight: 700; color: #f1f5f9; }
-    .app-header p  { font-size: 11px; color: #64748b; margin-top: 2px; }
-    #search-input {
-      width: 100%; padding: 7px 10px; border-radius: 6px;
-      border: 1px solid #334155; background: #0f172a; color: #e2e8f0;
-      font-size: 13px; outline: none; transition: border-color .15s;
-    }
-    #search-input:focus       { border-color: #38bdf8; }
-    #search-input::placeholder { color: #475569; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 2px 0; color: #cbd5e1; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .bar { width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-    .path-btn {
-      display: flex; align-items: center; gap: 8px;
-      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid;
-      cursor: pointer; font-size: 12px; font-weight: 600;
-      transition: opacity .15s; background: transparent; text-align: left; margin-bottom: 6px;
-    }
-    .path-btn:hover  { opacity: .75; }
-    .path-btn:last-child { margin-bottom: 0; }
-    #btn-rec-poa { border-color: #38bdf8; color: #38bdf8; }
-    #btn-mao-gru { border-color: #f97316; color: #f97316; }
-    #btn-reset   { border-color: #64748b; color: #94a3b8; }
-    #hover-bar {
-      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-      background: rgba(15,23,42,.90); border: 1px solid #334155;
-      border-radius: 6px; padding: 5px 14px; font-size: 11px; color: #94a3b8;
-      pointer-events: none; white-space: nowrap;
-    }
-  </style>
-</head>
-<body>
-
-<div id="sidebar">
-  <div class="app-header">
-    <h1>&#9992; Rede de Aeroportos</h1>
-    <p>128 aeroportos &middot; 426 conex&otilde;es &middot; Brasil</p>
-  </div>
-
-  <div>
-    <div class="section-title">Buscar Aeroporto</div>
-    <input id="search-input" type="text" placeholder="C&oacute;digo IATA ou cidade...">
-  </div>
-
-  <div>
-    <div class="section-title">Regi&otilde;es</div>
-    <div id="region-legend"></div>
-  </div>
-
-  <div>
-    <div class="section-title">Tipo de Conex&atilde;o</div>
-    <div id="edge-legend"></div>
-  </div>
-
-  <div>
-    <div class="section-title">Caminhos Obrigat&oacute;rios</div>
-    <button class="path-btn" id="btn-rec-poa">&#9992; Recife &rarr; Porto Alegre</button>
-    <button class="path-btn" id="btn-mao-gru">&#9992; Manaus &rarr; S&atilde;o Paulo</button>
-    <button class="path-btn" id="btn-reset">&#8635; Limpar Destaque</button>
-  </div>
-</div>
-
-<div id="network-wrap">
-  <div id="mynetwork"></div>
-  <div id="hover-bar">Passe o mouse sobre um aeroporto para ver detalhes</div>
-</div>
-
-<script>
-  const NODES_DATA = __NODES__;
-  const EDGES_DATA = __EDGES__;
-  const PATHS      = __PATHS__;
-  const REG_COLORS = __REG_COLORS__;
-  const EDG_COLORS = __EDG_COLORS__;
-  const EDG_LABELS = __EDG_LABELS__;
-
-  const nodesDS = new vis.DataSet(NODES_DATA);
-  const edgesDS = new vis.DataSet(EDGES_DATA);
-
-  const network = new vis.Network(
-    document.getElementById('mynetwork'),
-    { nodes: nodesDS, edges: edgesDS },
-    {
-      nodes: {
-        shape: 'dot',
-        font: { color: '#e2e8f0', size: 11, strokeWidth: 2, strokeColor: '#0f172a' },
-        borderWidth: 1.5,
-      },
-      edges: { width: 1, smooth: { type: 'continuous', roundness: 0.15 } },
-      physics: {
-        stabilization: { iterations: 150, updateInterval: 25 },
-        barnesHut: {
-          gravitationalConstant: -6000,
-          springLength: 100,
-          springConstant: 0.02,
-          damping: 0.09,
-        },
-      },
-      interaction: { hover: true, tooltipDelay: 80, navigationButtons: true, keyboard: true },
-    }
-  );
-
-  // Undirected edge lookup: "A|B" -> edgeId
-  const edgeLookup = {};
-  EDGES_DATA.forEach(e => {
-    edgeLookup[e.from + '|' + e.to]   = e.id;
-    edgeLookup[e.to   + '|' + e.from] = e.id;
-  });
-
-  // Snapshot original state for reset
-  const origNode = {};
-  NODES_DATA.forEach(n => { origNode[n.id] = n.color; });
-  const origEdge = {};
-  EDGES_DATA.forEach(e => { origEdge[e.id] = e.color; });
-
-  // ── Legends ────────────────────────────────────────────────────
-  const rl = document.getElementById('region-legend');
-  Object.entries(REG_COLORS).forEach(([reg, col]) => {
-    rl.innerHTML += `<div class="legend-item"><div class="dot" style="background:${col}"></div><span>${reg}</span></div>`;
-  });
-
-  const el = document.getElementById('edge-legend');
-  Object.entries(EDG_COLORS).forEach(([tipo, col]) => {
-    el.innerHTML += `<div class="legend-item"><div class="bar" style="background:${col}"></div><span>${EDG_LABELS[tipo] || tipo}</span></div>`;
-  });
-
-  // ── Search ─────────────────────────────────────────────────────
-  document.getElementById('search-input').addEventListener('input', function () {
-    const q = this.value.trim().toLowerCase();
-    if (!q) { resetAll(false); return; }
-
-    const ids = NODES_DATA
-      .filter(n => n.id.toLowerCase().includes(q) || (n.city || '').toLowerCase().includes(q))
-      .map(n => n.id);
-
-    if (!ids.length) { resetAll(false); return; }
-
-    applyDimAll();
-    nodesDS.update(ids.map(id => ({ id, color: '#facc15', opacity: 1 })));
-    if (ids.length === 1) network.focus(ids[0], { scale: 1.8, animation: { duration: 600 } });
-  });
-
-  // ── Path highlight ─────────────────────────────────────────────
-  function highlightPath(pathKey, color) {
-    const pnodes = PATHS[pathKey];
-    if (!pnodes || !pnodes.length) { alert('Caminho não disponível.'); return; }
-
-    applyDimAll();
-
-    nodesDS.update(pnodes.map(id => ({ id, color: color, opacity: 1 })));
-
-    const eUpdates = [];
-    for (let i = 0; i < pnodes.length - 1; i++) {
-      const eid = edgeLookup[pnodes[i] + '|' + pnodes[i + 1]];
-      if (eid !== undefined)
-        eUpdates.push({ id: eid, color: { color, highlight: color, hover: color }, width: 5, opacity: 1 });
-    }
-    edgesDS.update(eUpdates);
-    network.fit({ nodes: pnodes, animation: { duration: 800, easingFunction: 'easeInOutCubic' } });
-  }
-
-  function applyDimAll() {
-    nodesDS.update(NODES_DATA.map(n => ({ id: n.id, color: '#1e293b', opacity: 0.15 })));
-    edgesDS.update(EDGES_DATA.map(e => ({ id: e.id, color: { color: '#243347' }, width: 0.5, opacity: 0.12 })));
-  }
-
-  function resetAll(clearSearch) {
-    nodesDS.update(NODES_DATA.map(n => ({ id: n.id, color: origNode[n.id], opacity: 1 })));
-    edgesDS.update(EDGES_DATA.map(e => ({ id: e.id, color: origEdge[e.id], width: 1, opacity: 1 })));
-    if (clearSearch) document.getElementById('search-input').value = '';
-  }
-
-  document.getElementById('btn-rec-poa').addEventListener('click', () => highlightPath('REC->POA', '#38bdf8'));
-  document.getElementById('btn-mao-gru').addEventListener('click', () => highlightPath('MAO->GRU', '#f97316'));
-  document.getElementById('btn-reset').addEventListener('click',   () => resetAll(true));
-
-  // ── Hover info bar ─────────────────────────────────────────────
-  const hoverBar = document.getElementById('hover-bar');
-  network.on('hoverNode', p => {
-    const n = NODES_DATA.find(x => x.id === p.node);
-    if (n) hoverBar.textContent =
-      `${n.id} — ${n.city}  |  Região: ${n.region}  |  Grau: ${n.degree}  |  Densidade Ego: ${n.egoDensity.toFixed(4)}`;
-  });
-  network.on('blurNode', () => {
-    hoverBar.textContent = 'Passe o mouse sobre um aeroporto para ver detalhes';
-  });
-</script>
-</body>
-</html>
-"""
-
-
-def generate_interactive_graph(graph, ego_data, out_path, mandatory_paths=None):
-    """
-    Gera grafo interativo (out/grafo_interativo.html) com:
-    - Tooltip por aeroporto: grau, regiao, densidade_ego
-    - Caixa de busca por IATA ou cidade
-    - Botoes para realcar os caminhos obrigatorios REC->POA e MAO->GRU
-    """
-    ego_map = {item["aeroporto"]: item for item in ego_data}
-
-    # ── Nodes ──────────────────────────────────────────────────────
-    nodes = []
-    for iata, node in graph.nodes.items():
-        info = ego_map.get(iata, {"grau": 0, "densidade_ego": 0.0})
-        degree = int(info.get("grau", 0))
-        ego_density = float(info.get("densidade_ego", 0.0))
-        color = REGION_COLORS.get(node.region, "#94a3b8")
-        size = max(8, 8 + degree * 0.45)
-        tooltip = (
-            f"<b>{iata}</b> &mdash; {node.city}<br>"
-            f"<b>Regi&atilde;o:</b> {node.region}<br>"
-            f"<b>Grau:</b> {degree}<br>"
-            f"<b>Densidade Ego:</b> {ego_density:.4f}"
-        )
-        nodes.append({
-            "id":         iata,
-            "label":      iata,
-            "title":      tooltip,
-            "color":      color,
-            "size":       size,
-            "region":     node.region,
-            "city":       node.city,
-            "degree":     degree,
-            "egoDensity": ego_density,
-        })
-
-    # ── Edges ──────────────────────────────────────────────────────
-    edges = []
-    seen = set()
-    edge_id = 0
-    for u in graph.adjacency_list:
-        for edge in graph.adjacency_list[u]:
-            pair = tuple(sorted((u, edge.target)))
-            if pair in seen:
-                continue
-            seen.add(pair)
-            tipo = edge.connection_type
-            col = EDGE_COLORS.get(tipo, "#64748b")
-            edges.append({
-                "id":    edge_id,
-                "from":  u,
-                "to":    edge.target,
-                "title": f"{tipo}: {edge.justification} ({edge.weight:.0f} min)",
-                "color": {"color": col, "highlight": "#ffffff", "hover": "#ffffff"},
-            })
-            edge_id += 1
-
-    # ── Mandatory paths ────────────────────────────────────────────
-    paths_json = mandatory_paths if mandatory_paths else {}
-
-    html = _HTML \
-        .replace("__NODES__",      json.dumps(nodes,                ensure_ascii=False)) \
-        .replace("__EDGES__",      json.dumps(edges,                ensure_ascii=False)) \
-        .replace("__PATHS__",      json.dumps(paths_json,           ensure_ascii=False)) \
-        .replace("__REG_COLORS__", json.dumps(REGION_COLORS,        ensure_ascii=False)) \
-        .replace("__EDG_COLORS__", json.dumps(EDGE_COLORS,          ensure_ascii=False)) \
-        .replace("__EDG_LABELS__", json.dumps(_EDGE_LABELS,         ensure_ascii=False))
-
-    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(html)
-    print(f"Grafo interativo gerado em: {out_path}")
-
-
 def generate_path_tree(graph, paths, out_path):
     """Gera arvore de percurso para os caminhos obrigatorios (HTML interativo via vis.js)."""
     colors_seq = ["#38bdf8", "#f97316", "#22c55e", "#a78bfa", "#facc15"]
@@ -546,7 +255,7 @@ _LEGACY_PNGS = (
 
 def generate_exploratory_plots(out_dir, data_dir="data"):
     """
-    Gera 9 bundles analiticos em out/grafico_<slug>/ (PNG + analise.md).
+    Gera 10 bundles analiticos em out/grafico_<slug>/ (PNG + analise.md).
     """
     for legacy in _LEGACY_PNGS:
         legacy_path = os.path.join(out_dir, legacy)
@@ -1136,4 +845,82 @@ def generate_exploratory_plots(out_dir, data_dir="data"):
         ),
     )
 
-    print("9 visualizações analíticas geradas em out/grafico_*/")
+    # ── 10. Histograma de distribuição de graus (hubs destacados) ─────
+    # Lei da Proximidade (Gestalt): a cauda direita agrupa visualmente os hubs.
+    graus = ego_df["grau"].values
+    hub_threshold = float(np.percentile(graus, 90))
+    bins = np.arange(graus.min(), graus.max() + 2) - 0.5
+
+    fig, ax = plt.subplots(figsize=(11, 5.5))
+    counts, bin_edges, patches = ax.hist(
+        graus, bins=bins, edgecolor="#334155", linewidth=0.6,
+    )
+    # Barras da cauda (grau >= P90) pintadas como "hub", demais como "comum"
+    for patch, left in zip(patches, bin_edges[:-1]):
+        center = left + 0.5
+        patch.set_facecolor("#ef4444" if center >= hub_threshold else "#38bdf8")
+    ax.axvline(hub_threshold, color="#ef4444", linestyle="--", linewidth=1.5,
+               label=f"Limiar de hub (P90 = grau {hub_threshold:.0f})")
+    ax.axvline(graus.mean(), color="#facc15", linestyle="-.", linewidth=1.5,
+               label=f"Média ({graus.mean():.1f})")
+    # Anota os 5 maiores hubs sobre a cauda
+    top5_hubs = ego_df.nlargest(5, "grau")
+    y_annot = max(counts) * 0.55
+    for rank, (_, row) in enumerate(top5_hubs.iterrows()):
+        ax.annotate(
+            f"{row['aeroporto']} ({int(row['grau'])})",
+            xy=(row["grau"], 1), xytext=(row["grau"], y_annot + rank * max(counts) * 0.08),
+            ha="center", fontsize=8, color="#7f1d1d",
+            arrowprops=dict(arrowstyle="->", color="#ef4444", lw=0.8),
+        )
+    hub_count = int((graus >= hub_threshold).sum())
+    ax.set_title(
+        "Como se distribuem os graus dos aeroportos?\n"
+        f"Histograma com hubs destacados (grau ≥ P90): {hub_count} aeroportos concentram as conexões",
+        pad=12,
+    )
+    ax.set_xlabel("Grau (número de conexões diretas)")
+    ax.set_ylabel("Número de aeroportos")
+    handles, labels = ax.get_legend_handles_labels()
+    handles += [
+        mpatches.Patch(color="#38bdf8", label="Aeroporto comum"),
+        mpatches.Patch(color="#ef4444", label="Hub (grau ≥ P90)"),
+    ]
+    ax.legend(handles=handles, fontsize=9)
+    _stats_box(
+        ax,
+        f"n={len(graus)}\nmín={graus.min()} · máx={graus.max()}\n"
+        f"μ={graus.mean():.1f} · med={np.median(graus):.0f}",
+    )
+    hist_tbl = pd.DataFrame({
+        "Estatística": ["Mínimo", "Mediana", "Média", "P90 (limiar hub)", "Máximo", "Hubs (≥P90)"],
+        "Valor": [
+            f"{graus.min():.0f}", f"{np.median(graus):.0f}", f"{graus.mean():.1f}",
+            f"{hub_threshold:.0f}", f"{graus.max():.0f}", f"{hub_count}",
+        ],
+    })
+    _save_chart_bundle(
+        out_dir, "distribuicao_graus", fig,
+        _build_analise_md(
+            "Distribuição de graus",
+            "Como se distribuem os graus dos aeroportos da malha?",
+            ["`ego_aeroportos.csv`: grau de cada aeroporto"],
+            _df_to_md_table(hist_tbl),
+            [
+                "A distribuição é **assimétrica à direita**: a maioria dos aeroportos tem poucas "
+                "conexões e uma minoria (hubs, em vermelho) concentra grande parte das arestas.",
+                f"O limiar de hub (P90) é grau **{hub_threshold:.0f}**; {hub_count} aeroportos estão acima dele "
+                f"(top: {', '.join(top5_hubs['aeroporto'].tolist())}).",
+                "Padrão típico de redes de transporte hub-and-spoke: a média "
+                f"({graus.mean():.1f}) fica bem acima da mediana ({np.median(graus):.0f}).",
+                "Gestalt — Proximidade: a separação visual entre o corpo (azul) e a cauda (vermelho) "
+                "agrupa os hubs sem precisar de rótulos.",
+            ],
+            [
+                "Grau conta conexões distintas, não frequência de voos; um hub com poucas rotas "
+                "muito frequentes seria subestimado.",
+            ],
+        ),
+    )
+
+    print("10 visualizações analíticas geradas em out/grafico_*/")

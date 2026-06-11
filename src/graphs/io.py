@@ -5,7 +5,7 @@ from .graph import Node, Graph
 def load_airports(file_path: str) -> List[Node]:
     """Carrega os dados dos aeroportos a partir de um arquivo CSV."""
     airports = []
-    with open(file_path, mode='r', encoding='latin-1') as f:
+    with open(file_path, mode='r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
             airports.append(Node(
@@ -29,7 +29,7 @@ def load_adjacencies(file_path: str, graph: Graph):
 def load_routes(file_path: str) -> List[Tuple]:
     """Carrega os pares de rotas para cálculo de distância."""
     routes = []
-    with open(file_path, mode='r', encoding='latin-1') as f:
+    with open(file_path, mode='r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for row in reader:
             routes.append((row['origem'], row['destino']))
