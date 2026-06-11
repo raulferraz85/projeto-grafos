@@ -31,7 +31,6 @@ const PART2_PAGES: { id: Page; label: string }[] = [
 ];
 
 const PART1_IDS = new Set<Page>(["overview", "rankings", "routes", "graph", "airports"]);
-const PART2_IDS = new Set<Page>(["p2-dataset", "p2-grafo", "p2-algoritmos", "p2-performance"]);
 
 interface Props {
   data: AppData;
@@ -42,11 +41,9 @@ interface Props {
 }
 
 export function Layout({ data, page, onPageChange, dataStatus, children }: Props) {
-  const updatedLabel = dataStatus === "live" ? formatDateTime(data.generatedAt) : EM_DASH;
   const isHome = page === "home";
   const inPart1 = PART1_IDS.has(page);
   const navPages = inPart1 ? PART1_PAGES : PART2_PAGES;
-  const navLabel = inPart1 ? "Aeroportos" : "Spotify";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -66,29 +63,14 @@ export function Layout({ data, page, onPageChange, dataStatus, children }: Props
                 {isHome
                   ? "Projeto Grafos"
                   : inPart1
-                  ? "Rede de Aeroportos"
-                  : "Rede Musical Spotify"}
+                  ? "Parte 1 - Rede de Aeroportos"
+                  : "Parte 2 - Rede Musical Spotify"}
               </h1>
-              <p className="text-xs text-neutral-500">
-                {isHome ? (
-                  "CESAR · Teoria dos Grafos · BFS · DFS · Dijkstra · Bellman-Ford"
-                ) : (
-                  <>
-                    Brasil · atualizado em {updatedLabel}
-                    {dataStatus !== "live" && (
-                      <span className="ml-1 text-amber-700">· pré-visualização</span>
-                    )}
-                  </>
-                )}
-              </p>
             </div>
           </div>
 
           {!isHome && (
             <nav className="flex flex-wrap items-center gap-1">
-              <span className="mr-1 text-xs font-semibold text-neutral-400 uppercase tracking-wider select-none">
-                {navLabel}
-              </span>
               {navPages.map((p) => (
                 <button
                   key={p.id}
